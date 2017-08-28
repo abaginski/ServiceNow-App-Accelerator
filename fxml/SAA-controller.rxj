@@ -125,9 +125,14 @@ call bsf.import "java.lang.Runnable", "Runnable"
   /* for testing we use a GET request on one of the fundamental tables `sys_user_group` */
   API.URL = url || "/api/now/table/sys_user_group?sysparm_limit=1"
   rexxProxy = bsfCreateRexxProxy(.TestServiceNowCallback~new,, .Callback)
+  signal on any
   .Unirest~get(API.URL) -
           ~basicAuth(user, pass) -
           ~asJsonAsync(rexxProxy)
+  return
+  any:
+    button~setGraphic(.nil)           -- remove the loading symbol
+    raise propagate                   -- show the error message
 
 
 /**
@@ -164,7 +169,13 @@ call bsf.import "java.lang.Runnable", "Runnable"
   runnable = bsfCreateRexxProxy(self, userData, .Runnable)
   .Platform~runLater(runnable)
 
-
+/**
+ * Called by a java.lang.Runnable interface
+ * Decides based on the userData in the slotDir argument, whether the response is 200 OK and a tick mark has to be
+ * displayed, otherwise shows a popup with some information about the error
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
 ::method run
   use arg slotDir
   userData = slotDir~userData
@@ -179,12 +190,11 @@ call bsf.import "java.lang.Runnable", "Runnable"
       message ||= "Status Code:" statusCode .endOfLine
       message ||= "Server Response:" response~getBody~toString
       call showPopup message
-      button~setGraphic(.nil)
+      button~setGraphic(.nil)             -- remove the loading graphic
     end
   end
   else do
     /* no response, so method "failed" invoked this runnable */
-    say "exc"
     exception = userData~exception
     message = "The Server could not be reached!" .endOfLine
     message ||= "Message:" exception~getMessage .endOfLine
@@ -193,6 +203,7 @@ call bsf.import "java.lang.Runnable", "Runnable"
     call showPopup message
     button~setGraphic(.nil)
   end
+
 
 /**
  * Connects via JDBC to a Database

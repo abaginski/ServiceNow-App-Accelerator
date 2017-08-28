@@ -243,7 +243,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" text="https://dev36664.service-now.com" promptText="e.g. https://dev36664.service-now.com/" />
+                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/" />
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="25.0" />
@@ -257,7 +257,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" text="admin" promptText="Username for this instance" />
+                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance" />
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="10.0" />
@@ -271,7 +271,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" text="zPfH5DreCSpq" promptText="Password for this instance" />
+                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance" />
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="10.0" />

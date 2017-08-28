@@ -18,7 +18,6 @@ call addJarsFromDirToClasspath javaFolder
 /* exit this program if the return value of the latest routine call returned "true" */
 if result = .true then exit
 /* static class imports */
---call bsf.import "java.lang.Thread"      , "Thread"
 call bsf.import "javafx.fxml.FXMLLoader", "FXMLLoader"
 call bsf.import "javafx.scene.text.Font", "Font"
 /* prepare the URL class loader for the root directory of this application */
@@ -45,54 +44,6 @@ syntax:
    exit -1
 
 
-
-dbName = "wissenschaftskompass"
-call dbConnect dbName       -- execute the dbConnect routine with dbName as argument
-statement = result~createStatement
-/* create a new instance of the database class of the section "classes" below
-   send the name of the database to the constructor first */
-dbData = .database~new(dbName)
-
-/*resultSet = statement~executeQuery("show databases")
-say "Databases:"
-loop while resultSet~next
-    dbName = resultSet~getString("Database")
-    say dbName
-    dbData~append(dbName)
-end
--- which of those databases do you want to import?
-*/
-
---resultSet = statement~executeQuery("SELECT TABLE_NAME FROM information_schema.TABLES")
-resultSet = statement~executeQuery("show tables")
-columnHeading = "Tables_in_" || dbName
-loop while resultSet~next
-  tableName = resultSet~getString(columnHeading)
-  table = .DbTable~new(tableName)
-  --dbData~addTable(table)
-end
-dbData~addTable(.dbTable~new("artikel"))
-
-/* iterate over all database tables to perform a set of operation for each one 
-   so every iteration will hold its own DbTable object in the variable "table" */
-loop table over dbData~tables
-    resultSet = statement~executeQuery('describe `'table~name'`')
-    /* create the "structure" entry for this table which will hold information about the columns */
-    loop while resultSet~next
-	    column = .column~new
-        column~field = resultSet~getString("Field")
-        column~type = resultSet~getString("Type")
-        column~null = resultSet~getBoolean("Null")
-        column~key = resultSet~getString("Key")
-        column~default = resultSet~getString("Default")
-        column~extra = resultSet~getString("Extra")
-		table~addColumn(column)
-    end
-end
-
-
-
-/* now fill the dbData object with data for each table */
 
 /**************************************************************************************************/
 /*                               CLASSES                                                          */
