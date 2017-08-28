@@ -1,0 +1,234 @@
+/*
+@font-face {
+    src: url("fonts/palanquindark-regular.ttf");
+}
+@font-face {
+    src: url("fonts/palanquin-regular.ttf");
+}
+
+
+
+.root {
+    -dark-blue: #181621;
+}
+*/
+
+.h1 {
+    -fx-font-family: "Palanquin Dark";
+    -fx-font-size: 22px;
+}
+
+.root {
+    -fx-font-size:14px;
+}
+
+.root > .tab-pane > .tab-header-area > .tab-header-background {
+    -fx-opacity: 0;
+}
+
+
+.root > .tab-pane > .tab-header-area {
+    -fx-padding: 22 0 0 6;
+}
+
+.root > .tab-pane > .tab-header-area {
+    -fx-font-family: "Palanquin Dark";
+    -fx-cursor: hand;
+    -fx-background-color:#181621;
+    -fx-border-width:0 0 9 0;
+    -fx-border-color:#214778;
+}
+
+.tab-content-area {
+    -fx-font-family: Palanquin;
+}
+
+.root > .tab-pane
+{
+    -fx-tab-min-width:20px;
+    -fx-tab-min-height:70px;
+}
+
+.tab {
+    -fx-focus-color: transparent;
+    -fx-focus-faint-color: transparent;
+    -fx-background-color:transparent;
+    /*-fx-background-insets: 0, 0 5 0 0, 1 6 0 0 ;*/
+    /*-fx-padding: 4 10 4 4 ;*/
+    /*-fx-background-insets: 1 6, 0 5 0 0, 1;*/
+}
+
+
+
+.tab:selected {
+    -fx-background-color: #214778;
+    -fx-focus-color: transparent;
+    -fx-focus-faint-color: transparent;
+}
+
+.root > .tab-pane > .tab:hover > .tab-label {
+    -fx-text-fill:white;
+}
+
+
+
+.tab .tab-label { 
+    -fx-alignment: CENTER;
+    -fx-text-fill: #d8d8d8;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.tab:selected .tab-label { 
+    -fx-alignment: CENTER;
+    -fx-text-fill: white;
+}
+
+
+.tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+
+.tab *.tab-label {
+    -fx-rotate: 90;
+}
+
+.tab {
+    -fx-padding: 70px 5px;
+}
+
+
+.scroll-pane {
+    -fx-background-color:transparent;
+}
+
+
+.button {
+    -fx-padding: 5 22;
+    -fx-border-color: #113666;
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+        /*-fx-background-radius: 0;*/
+    -fx-background-color: #181621;
+    -fx-font-size: 10pt;
+    -fx-text-fill: #d8d8d8;
+    -fx-background-insets: 0 0 0 0, 0, 1, 2;
+    -fx-cursor:hand;
+    -fx-min-width:120px;
+    -fx-max-height: 20px;
+}
+
+.glyph-icon {
+    -fx-fill: white;
+}
+
+.info-button > .glyph-icon {
+    -fx-fill: inherit;
+}
+
+.hasGraphic {
+    -fx-padding: 5 22 5 0;
+}
+
+.button:hover {
+    -fx-text-fill: white;
+    -fx-background-color:#214778;
+}
+
+.info-button {
+    -fx-background-color:white;
+    -fx-text-fill:#333;
+    -fx-border-color:transparent;
+}
+
+.info-button:hover {
+    -fx-text-fill: inherit;
+    -fx-background-color: #f4f5f7;
+}
+
+
+.check-box {
+   -fx-cursor:hand;
+   -fx-focus-color: transparent;
+   -fx-focus-faint-color: transparent;
+   -fx-background-insets: 0, 0, 1, 2;
+   -jfx-checked-color: #214778;
+   -fx-padding:0 0 5px 0;    
+}
+
+
+.jfx-progress-bar > .track, .jfx-progress-bar > .bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.jfx-progress-bar > .track {
+    -fx-background-color: #E0E0E0;
+}
+
+.jfx-progress-bar > .bar {
+    -fx-background-color: #214778;
+}
+
+/*.jfx-tab-pane {
+    -fx-border-width:0 0 0 1;
+    -fx-border-color:#5690ef;
+}
+*/
+.jfx-tab-pane .headers-region,
+.jfx-tab-pane .tab-header-background {
+    -fx-background-color: transparent;
+    -fx-effect:null;
+}
+
+.jfx-tab-pane .tab-selected-line {
+    -fx-background-color:#214778;
+}
+
+.jfx-tab-pane .tab-header-area .jfx-rippler{
+    -jfx-rippler-fill: #E0E0E0;
+}
+
+.jfx-tab-pane .tab *.tab-label {
+    -fx-rotate: 0;
+}
+
+.jfx-tab-pane .tab:selected {
+    -fx-text-fill: white;
+    -fx-background-color:transparent;
+}
+.jfx-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #214778;
+}
+
+.jfx-tab-pane {
+    -fx-padding:0 0 0 0;
+    -fx-tab-min-width:200px;
+    -fx-tab-min-height:50px;
+    -fx-background-color: transparent;
+}
+
+.jfx-tab-pane .tab-header-area {
+    -fx-cursor:hand;
+}
+
+.jfx-tab-pane .tab-label {
+    -fx-text-fill:#181621;
+}
+
+.jfx-tab-pane .tab {
+   -fx-padding:0;
+}
+
+.jfx-tab-pane .tab-header-area {
+    -fx-padding:15px 0 0 40px;
+}
+
+.no-tab-header {
+    -fx-tab-max-height: 0 ;
+} 
+.no-tab-header .tab-header-area {
+    visibility: hidden ;
+}

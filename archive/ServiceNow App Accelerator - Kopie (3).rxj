@@ -1,0 +1,182 @@
+#!/usr/bin/rexx
+-- imports
+
+signal on syntax
+call bsf.import "java.lang.Thread", "java.lang.Thread"
+call bsf.import "java.lang.Runnable", "java.lang.Runnable"
+Application = BsfCreateRexxProxy(.RxDocHandler~new,,"javafx.application.Application")
+Application~launch(Application~getClass,.nil)
+exit 0
+
+syntax:
+   co = condition("object")
+   say ppCondition2(co)
+   exit -1
+
+
+::class RxDocHandler
+::method start    -- will be invoked by the "launch" method
+  expose progressIndicator
+  use arg stage -- we get the primary stage to use for our UI
+  progressIndicator = .bsf~new("javafx.scene.control.ProgressIndicator", 0.0)
+  root = .bsf~new("javafx.scene.layout.StackPane")
+  root~getChildren~add(progressIndicator)
+  scene = .bsf~new("javafx.scene.Scene", root, 200, 200)
+  stage~~setScene(scene) ~~show
+  self~animateProgress(0,1)
+
+
+
+parse source os . absoluteFilepath
+/* set the path seperator to ";" for Windows OS and to ":" for Unix OS 
+   this will be needed to set environment variables like PATH, JAVA_HOME and CLASSPATH */
+.local~pathSeperator = (os="WindowsNT")~?(";", ":")
+
+call addClasspathExtensions "mysql-connector-java-5.1.43-bin", "unirest-java-1.4.9", "jfoenix"
+/* exit this program if the return value of the latest routine call returned "true" */
+if result = .true then exit
+
+dbName = "wissenschaftskompass"
+call dbConnect dbName       -- execute the dbConnect routine with dbName as argument
+statement = result~createStatement
+/* create a new instance of the database class of the section "classes" below
+   send the name of the database to the constructor first */
+dbData = .database~new(dbName)
+
+/*resultSet = statement~executeQuery("show databases")
+say "Databases:"
+loop while resultSet~next
+    dbName = resultSet~getString("Database")
+    say dbName
+    dbData~append(dbName)
+end
+-- which of those databases do you want to import?
+*/
+
+--resultSet = statement~executeQuery("SELECT TABLE_NAME FROM information_schema.TABLES")
+resultSet = statement~executeQuery("show tables")
+columnHeading = "Tables_in_" || dbName
+loop while resultSet~next
+  tableName = resultSet~getString(columnHeading)
+  table = .DbTable~new(tableName)
+  --dbData~addTable(table)
+end
+dbData~addTable(.dbTable~new("artikel"))
+
+/* iterate over all database tables to perform a set of operation for each one 
+   so every iteration will hold its own DbTable object in the variable "table" */
+loop table over dbData~tables
+    resultSet = statement~executeQuery('describe `'table~name'`')
+    /* create the "structure" entry for this table which will hold information about the columns */
+    loop while resultSet~next
+	    column = .column~new
+        column~field = resultSet~getString("Field")
+        column~type = resultSet~getString("Type")
+        column~null = resultSet~getBoolean("Null")
+        column~key = resultSet~getString("Key")
+        column~default = resultSet~getString("Default")
+        column~extra = resultSet~getString("Extra")
+		table~addColumn(column)
+    end
+end
+
+
+
+/* now fill the dbData object with data for each table */
+
+/**************************************************************************************************/
+/*                               CLASSES                                                          */
+/**************************************************************************************************/
+
+/**
+  * The class "database" holds the schema information about one database
+  */
+::class Database
+::attribute tables
+::method init
+/* save the argument as a class variable with the name "dbName" */
+  expose dbName tables
+  use arg dbName
+  tables = .array~new
+
+::method addTable
+  expose tables
+  use arg table
+  tables~append(table)
+
+/**
+  * The class "dbTable" holds the meta information of a database table
+  */  
+::class DbTable
+::attribute name
+::attribute columns
+::method init
+  expose name columns
+  use arg name
+  columns = .array~new
+
+::method addColumn
+  expose columns
+  use arg column
+  columns~append(column)
+
+  
+  
+::class Column
+::attribute name
+::attribute field
+::attribute type
+::attribute null
+::attribute default
+::attribute extra
+::attribute key
+
+
+
+/**************************************************************************************************/
+/*                               ROUTINES                                                         */
+/**************************************************************************************************/
+
+/**
+  * This function inserts the Java archives from the arguments to the classpath and restarts this application to
+  * make them accessible and use the classes from those Java archives
+  */
+::routine addClasspathExtensions
+  /* loop over the argument list and concatenate the jars using the pathseperator of the File class */
+  pathExtension = ""		
+  do i=1 to arg()
+    /* get the operating system specific absolute filepath to the jar files 
+       all jar files are located in the "java" subdirectory */
+    pathExtension ||= qualify("java/" || arg(i) || ".jar") || .pathSeperator
+  end
+  /* get the current value of the CLASSPATH environment variable */
+  classpath = value("CLASSPATH",,"ENVIRONMENT")
+  /* look for our jar files in the classpath */
+  if classpath~pos(pathExtension) = 0 then do
+    newClasspath = classpath || .pathSeperator || pathExtension    -- append our paths to be looked up last
+    call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
+    /* run the Application again making use of the new classpath */
+    'rexxj "ServiceNow App Accelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+    /* change PATH back to original and return "true" to exit the application */
+    call value "CLASSPATH", classpath, "ENVIRONMENT"
+    return .true
+  end
+
+
+::routine dbConnect
+  use arg dbName
+  /* Define your user-id and password to access the MySQL-DB*/
+  user = "root"
+  password = ""
+  /*Define the url to the database*/
+  -- for example for MySQL via jdbc on default-port 3306
+  url = "jdbc:mysql://localhost:3306/" || dbName;
+  /*Get the JDBC-Driver */
+  driver = .bsf~new('com.mysql.jdbc.Driver')
+  call bsf.import "java.sql.DriverManager", DriverManager
+  .DriverManager~registerDriver(driver)
+  /*Building the Connection*/
+  connection = .DriverManager~getConnection(url, user, password)
+  return connection
+
+::requires "BSF.CLS" -- get Java Support

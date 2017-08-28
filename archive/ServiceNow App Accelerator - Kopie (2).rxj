@@ -1,0 +1,118 @@
+#!/usr/bin/rexx
+-- imports
+parse source os . absoluteFilepath
+/* set the path seperator to ";" for Windows OS and to ":" for Unix OS 
+   this will be needed to set environment variables like PATH, JAVA_HOME and CLASSPATH */
+.local~pathSeperator = (os="WindowsNT")~?(";", ":")
+
+call addClasspathExtensions "mysql-connector-java-5.1.43-bin", "unirest-java-1.4.9", "jfoenix"
+/* exit this program if the return value of the latest routine call returned "true" */
+if result = .true then exit
+
+dbName = "wissenschaftskompass"
+call dbConnect dbName       -- execute the dbConnect routine with dbName as argument
+statement = result~createStatement
+dbData = .array~new     -- this variable will store all the information about this database
+
+/*resultSet = statement~executeQuery("show databases")
+say "Databases:"
+loop while resultSet~next
+    dbName = resultSet~getString("Database")
+    say dbName
+    dbData~append(dbName)
+end
+-- which of those databases do you want to import?
+*/
+
+--resultSet = statement~executeQuery("SELECT TABLE_NAME FROM information_schema.TABLES")
+resultSet = statement~executeQuery("show tables")
+columnHeading = "Tables_in_" || dbName
+loop while resultSet~next
+    tableName = resultSet~getString(columnHeading)
+    table = .directory~new
+    table~name = tableName
+    dbData~append(table)
+end
+
+--todo: GUI löscht Tabellen
+dbData = .array~new
+dbData[1] = .directory~new
+dbData[1]~name = "artikel"
+
+loop with index idx item table over dbData         -- iterate over the dbData array to perform an operation for each table
+    --query = .jString~format("describe `%s`", tableName)
+    resultSet = statement~executeQuery('describe `'table~name'`')
+    /* create the "structure" entry for this table which will hold information about the columns */
+    dbData[idx]~structure = .array~new
+    loop while resultSet~next
+        tableStructure = .directory~new
+        tableStructure~Field = resultSet~getString("Field")
+        tableStructure~Type = resultSet~getString("Type")
+        tableStructure~Null = resultSet~getBoolean("Null")
+        tableStructure~Key = resultSet~getString("Key")
+        tableStructure~Default = resultSet~getString("Default")
+        tableStructure~Extra = resultSet~getString("Extra")
+        dbData[idx]~structure~append(tableStructure)
+    end
+end
+
+say dbData[1]~name
+say dbData[1]~structure[1]~Field
+say dbData[1]~structure[2]~Field
+
+/* now fill the dbData object with data for each table */
+
+/***************************************************************************/
+/*                               CLASSES                                   */
+/***************************************************************************/
+::class dbData
+::method init
+
+
+/***************************************************************************/
+/*                               ROUTINES                                  */
+/***************************************************************************/
+
+/**
+ * This function inserts the Java archives from the arguments to the classpath and restarts this application to
+ * make them accessible and use the classes from those Java archives
+ */
+::routine addClasspathExtensions
+  /* loop over the argument list and concatenate the jars using the pathseperator of the File class */
+  pathExtension = ""		
+  do i=1 to arg()
+    /* get the operating system specific absolute filepath to the jar files 
+       all jar files are located in the "java" subdirectory */
+    pathExtension ||= qualify("java/" || arg(i) || ".jar") || .pathSeperator
+  end
+  /* get the current value of the CLASSPATH environment variable */
+  classpath = value("CLASSPATH",,"ENVIRONMENT")
+  /* look for our jar files in the classpath */
+  if classpath~pos(pathExtension) = 0 then do
+    newClasspath = classpath || .pathSeperator || pathExtension    -- append our paths to be looked up last
+    call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
+    /* run the Application again making use of the new classpath */
+    'rexxj "ServiceNow App Accelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+    /* change PATH back to original and return "true" to exit the application */
+    call value "CLASSPATH", classpath, "ENVIRONMENT"
+    return .true
+  end
+
+
+::routine dbConnect
+  use arg dbName
+  /* Define your user-id and password to access the MySQL-DB*/
+  user = "root"
+  password = ""
+  /*Define the url to the database*/
+  -- for example for MySQL via jdbc on default-port 3306
+  url = "jdbc:mysql://localhost:3306/" || dbName;
+  /*Get the JDBC-Driver */
+  driver = .bsf~new('com.mysql.jdbc.Driver')
+  call bsf.import "java.sql.DriverManager", DriverManager
+  .DriverManager~registerDriver(driver)
+  /*Building the Connection*/
+  connection = .DriverManager~getConnection(url, user, password)
+  return connection
+
+::requires "BSF.CLS" -- get Java Support

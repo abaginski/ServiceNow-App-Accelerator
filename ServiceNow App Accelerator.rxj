@@ -1,0 +1,217 @@
+#!/usr/bin/rexx
+/**
+ * The main application which loads all Fonts, puts all `jar` files to the classpath
+ * and starts the GUI
+ *
+ * @author Adrian Baginski, BSc (WU)
+ * @version 1.0, 2017-08-27
+ */
+
+/* in case an error occurres, jump to `Syntax:` expression for custom error handling */
+signal on syntax
+/* parse operating system and filepath of this script */
+parse source os . absoluteFilepath
+/* add all jars from the java directory to the classpath to make use of the provided classes */
+appDirectory = filespec("Location", absoluteFilepath)   -- determine path to this Rexx program
+javaFolder   = appDirectory || "java" || .file~separator
+call addJarsFromDirToClasspath javaFolder
+/* exit this program if the return value of the latest routine call returned "true" */
+if result = .true then exit
+/* static class imports */
+--call bsf.import "java.lang.Thread"      , "Thread"
+call bsf.import "javafx.fxml.FXMLLoader", "FXMLLoader"
+call bsf.import "javafx.scene.text.Font", "Font"
+/* prepare the URL class loader for the root directory of this application */
+jfile = .bsf~new("java.io.File", appDirectory)
+urlAppDir = jfile~toUri~toUrl
+.local~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+/* setup environment variables */
+.environment~jsonLocation = "ooRexx/credentials.json"
+/* load fonts
+   one could also use @font-face in css to load fonts, but as of 2017-08-24 there is a bug in JavaFX 8 if the
+   path to the fonts has spaces in it. That is why it is safer to use this method
+   see https://stackoverflow.com/questions/33973921/javafx-font-face-css-error-loadstylesheetunprivileged
+*/
+.Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquindark-regular.ttf"), 14)
+.Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquin-regular.ttf")    , 14)
+/* launch the JavaFX Application Thread */
+.environment~Application = bsfCreateRexxProxy(.RxDocHandler~new,,"javafx.application.Application")
+.Application~launch(.Application~getClass,.nil)           -- invoke the "start" Method of .RxDocHandler
+exit 0
+
+syntax:
+   co = condition("object")
+   say ppCondition2(co)
+   exit -1
+
+
+
+dbName = "wissenschaftskompass"
+call dbConnect dbName       -- execute the dbConnect routine with dbName as argument
+statement = result~createStatement
+/* create a new instance of the database class of the section "classes" below
+   send the name of the database to the constructor first */
+dbData = .database~new(dbName)
+
+/*resultSet = statement~executeQuery("show databases")
+say "Databases:"
+loop while resultSet~next
+    dbName = resultSet~getString("Database")
+    say dbName
+    dbData~append(dbName)
+end
+-- which of those databases do you want to import?
+*/
+
+--resultSet = statement~executeQuery("SELECT TABLE_NAME FROM information_schema.TABLES")
+resultSet = statement~executeQuery("show tables")
+columnHeading = "Tables_in_" || dbName
+loop while resultSet~next
+  tableName = resultSet~getString(columnHeading)
+  table = .DbTable~new(tableName)
+  --dbData~addTable(table)
+end
+dbData~addTable(.dbTable~new("artikel"))
+
+/* iterate over all database tables to perform a set of operation for each one 
+   so every iteration will hold its own DbTable object in the variable "table" */
+loop table over dbData~tables
+    resultSet = statement~executeQuery('describe `'table~name'`')
+    /* create the "structure" entry for this table which will hold information about the columns */
+    loop while resultSet~next
+	    column = .column~new
+        column~field = resultSet~getString("Field")
+        column~type = resultSet~getString("Type")
+        column~null = resultSet~getBoolean("Null")
+        column~key = resultSet~getString("Key")
+        column~default = resultSet~getString("Default")
+        column~extra = resultSet~getString("Extra")
+		table~addColumn(column)
+    end
+end
+
+
+
+/* now fill the dbData object with data for each table */
+
+/**************************************************************************************************/
+/*                               CLASSES                                                          */
+/**************************************************************************************************/
+
+/**
+  * The main GUI class
+  */
+::class RxDocHandler
+::method start    -- will be invoked by the "launch" method
+  use arg stage   -- we get the primary stage to use for our UI
+  sceneFXMLUrl = .appClzLdr~findResource("fxml/SAA.fxml")
+  sceneFXML    = .FXMLLoader~load(sceneFXMLUrl)   -- load the fxml document
+  /* create a scene from the FXML DOM and assign it to the stage */
+  scene = .bsf~new("javafx.scene.Scene", sceneFXML) -- create a scene for our document
+  stage~~setScene(scene) -
+       ~~show                   -- show the GUI
+
+  /* combobox default selections as this is not possible in fxml */
+  databaseType = .my.app~SAA.fxml~databaseType~getSelectionModel
+  databaseType~select(0)        -- autoselect the first 0-based value
+  manageCombobox = .my.app~SAA.fxml~manageCombobox~getSelectionModel
+  manageCombobox~select(0)
+
+
+
+  TabPane = .my.app~SAA.fxml~mainTabPane
+  SelectionModel = TabPane~getSelectionModel
+  SelectionModel~selectNext
+
+/**
+ * "Stop" is called automatically when shutting down the GUI
+ */
+::method stop
+  /* Unirest starts a background event loop until you manually shutdown all the threads by invoking shutdown */
+  .Unirest~shutdown
+
+/**
+  * The class "Database" holds the schema information about one database
+  */
+::class Database
+::attribute tables
+::method init
+/* save the argument as a class variable with the name "dbName" */
+  expose dbName tables
+  use arg dbName
+  tables = .array~new
+
+::method addTable
+  expose tables
+  use arg table
+  tables~append(table)
+
+/**
+  * The class "dbTable" holds the meta information of a database table
+  */  
+::class DbTable
+::attribute name
+::attribute columns
+::method init
+  expose name columns
+  use arg name
+  columns = .array~new
+
+::method addColumn
+  expose columns
+  use arg column
+  columns~append(column)
+
+  
+  
+::class Column
+::attribute name
+::attribute field
+::attribute type
+::attribute null
+::attribute default
+::attribute extra
+::attribute key
+
+
+
+/**************************************************************************************************/
+/*                               ROUTINES                                                         */
+/**************************************************************************************************/
+
+/**
+ * Inserts the Java archives from the arguments to the classpath and restarts this application to
+ * make them accessible and use the classes from those Java archives
+ *
+ * @param javaDir - The absolute filepath to the directory which holds the required Java archives
+ */
+::routine addJarsFromDirToClasspath
+  use strict arg javaDir
+  pathExtension = ""
+  /* use a Built-In-Function (BIF) to retrieve all jars from the java directory */
+  call SysFileTree javaDir, "jars", "F"   -- search for files in java/ and save as a .stem in `jars`
+  loop i = 1 to jars.0              -- the 0th entry of a stem holds the number of items
+    parse var jars.i . . . . jar    -- remove the first 4 bits of information (date, time, size, access control)
+    extension = filespec("extension", jar)      -- fetch the extension of the file
+    if extension = "jar" then do
+      pathExtension ||= jar~strip
+      pathExtension ||= .file~pathSeparator       -- the pathseperator of the File class holds ";" or ":" depending on the OS
+    end
+  end
+  /* get the current value of the CLASSPATH environment variable */
+  classpath = value("CLASSPATH",,"ENVIRONMENT")
+  /* look for our jar files in the classpath */
+  if classpath~pos(pathExtension) = 0 then do
+    newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
+    call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
+    /* run the Application again making use of the new classpath */
+    'rexxj "ServiceNow App Accelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+    /* change PATH back to original and return "true" to exit the application */
+    call value "CLASSPATH", classpath, "ENVIRONMENT"
+    return .true
+  end
+
+
+
+::requires "BSF.CLS"        -- get Java Support
+::requires "rgf_util2.rex"  -- holds the routine ppCondition2 for error printing

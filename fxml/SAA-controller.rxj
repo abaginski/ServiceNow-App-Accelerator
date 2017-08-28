@@ -1,0 +1,311 @@
+/**
+ * The FXML Controller File communicates directly with the FXML controls from "SAA.fxml".
+ * All Button or HyperLink clicks in FXML controls result in invoking a public Routine located in this file.
+ *
+ * @author Adrian Baginski, BSc (WU)
+ * @version 1.0, 2017-08-27
+ */
+
+/* Java static class imports */
+call bsf.import "java.sql.DriverManager", "DriverManager"
+call bsf.import "javafx.scene.control.Alert$AlertType", "AlertType"     -- nested classes have a dollar sign in their qualified name
+call bsf.import "de.jensd.fx.glyphs.materialicons.MaterialIcon", "MaterialIcon"
+call bsf.import "com.mashape.unirest.http.async.Callback", "Callback"
+call bsf.import "com.mashape.unirest.http.Unirest", "Unirest"
+call bsf.import "javafx.application.Platform", "Platform"
+call bsf.import "java.lang.Runnable", "Runnable"
+
+/**
+ * Fetches the E-Mail address from slotDir and writes a new Mail using the default Mail client
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine openMail public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  event = scriptContext~getAttribute("event")
+  hyperlink = event~target
+  eMailAddress = hyperlink~text
+  .Application~getHostServices~showDocument("mailto:" || eMailAddress)
+
+
+/**
+ * Selects the next Tab ('configuration')
+ */
+::routine goToConfiguration public
+  TabPane = .my.app~SAA.fxml~mainTabPane
+  SelectionModel = TabPane~getSelectionModel
+  SelectionModel~selectNext
+
+
+/**
+ * Tries to connect to the Database and shows the result as a Popup or Button image, depending on the result
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine testDatabaseConnection public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  /*@get(databaseType databaseHost databasePort databaseUsername databasePassword databaseDatabase testDatabaseConnectionButton)*/
+  call setLoadingSymbolToButton testDatabaseConnectionButton
+  call SysSleep .5    -- wait 500ms for Java to update its GUI
+  /* now connect to the Database, since the arguments from the scriptContext reference Java objects, we need
+     to extract the values of them before passing to the routine "dbConnect" */
+  selectedType = databaseType~getSelectionModel~getSelectedItem
+  signal on syntax
+  call dbConnect selectedType, databaseHost~getText, databaseUsername~getText, databasePassword~getText, -
+                 databaseDatabase~getText, databasePort~getText
+  if result~isA(.bsf) then do       -- a Connection returned, i.e. dbConnect was successful
+    call setCheckGraphicToButton testDatabaseConnectionButton
+  end
+  return
+
+  syntax:
+    co = condition('o')
+    message = co['ADDITIONAL'][1]
+    call showPopup message
+    testDatabaseConnectionButton~graphic = .nil         -- remove the loading spinner, test connection failed
+
+/**
+ * Saves the provided Database information in an ooRexx StringTable and
+ * invokes `saveRexxObjToJson` to save the data persistantly
+ * It is recommended to test the connection first, as this routine merely saves the data!
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine saveDatabase public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  /*@get(databaseType databaseHost databasePort databaseUsername databasePassword databaseDatabase saveDatabaseButton)*/
+  /* create a Rexx Object to hold all information */
+  rxObj = .stringTable~new
+  rxObj~type = databaseType~getSelectionModel~selectedItem
+  rxObj~host = databaseHost~getText
+  rxObj~port = databasePort~getText
+  rxObj~user = databaseUsername~getText
+  rxObj~pass = databasePassword~getText
+  rxObj~dbName = databaseDatabase~getText
+  call saveRexxObjToJson rxObj, "Database"
+  call setCheckGraphicToButton saveDatabaseButton
+
+/**
+ * Saves the content of the three input controls in the `ServiceNow` tab
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine saveServiceNow public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  /*@get(servicenowURL servicenowUsername servicenowPassword saveServiceNowButton)*/
+  /* create a Rexx Object to hold all information */
+  rxObj = .stringTable~new
+  rxObj~url = servicenowURL~getText
+  rxObj~user = servicenowUsername~getText
+  rxObj~pass = servicenowPassword~getText
+  call saveRexxObjToJson rxObj, "ServiceNow"
+  call setCheckGraphicToButton saveServiceNowButton
+
+
+/**
+ * Connects to the URL specified in the control in the `ServiceNow` tab using basic authentication with
+ * username and password that are also supplied in this tab.
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine testServiceNow public
+  use arg slotDir
+  /*@get(servicenowURL servicenowUsername servicenowPassword)*/
+  /* build the REST request using the `Unirest` API */
+  button = .my.app~SAA.fxml~testServiceNowButton
+  call setLoadingSymbolToButton button
+  call SysSleep .5    -- wait 500ms for Java to update its GUI
+  url  = servicenowUrl~getText
+  user = servicenowUsername~getText
+  pass = servicenowPassword~getText
+  /* for testing we use a GET request on one of the fundamental tables `sys_user_group` */
+  API.URL = url || "/api/now/table/sys_user_group?sysparm_limit=1"
+  rexxProxy = bsfCreateRexxProxy(.TestServiceNowCallback~new,, .Callback)
+  .Unirest~get(API.URL) -
+          ~basicAuth(user, pass) -
+          ~asJsonAsync(rexxProxy)
+
+
+/**
+ * A Rexx Proxy Class. Java can invoke methods in this class
+ */
+::class TestServiceNowCallback
+/**
+ * The REST API call was successful and returns a response
+ * Examines the status code and displays the result to the user
+ *
+ * @param response - <code>com.mashape.unirest.http.HttpResponse</code>
+ */
+::method completed
+  use arg response
+  userData = .stringTable~new
+  userData~response = response
+  /* create another Proxy - let this class carry out the invoked method "run" */
+  runnable = bsfCreateRexxProxy(self, userData, .Runnable)
+  /* since this Async call operates in a separate Thread, we cannot change controls in the user interface
+     so we need to use Platform.runLater() to queue the GUI changes in the main FX Application Thread */
+  .Platform~runLater(runnable)
+
+/**
+ * The REST API call was not successful, probably because the host is not reachable
+ * Displays an error message with the stack trace
+ *
+ * @param exception - <code>com.mashape.unirest.http.exceptions.UnirestException</code>
+ */
+::method failed
+  use arg exception
+  say exc~getMessage exc~getSuppressed exc~getCause exc~getStackTrace
+  userData = .stringTable~new
+  userData~exception = exception
+  runnable = bsfCreateRexxProxy(self, userData, .Runnable)
+  .Platform~runLater(runnable)
+
+
+::method run
+  use arg slotDir
+  userData = slotDir~userData
+  button = .my.app~SAA.fxml~testServiceNowButton
+  if userData~hasEntry("response") then do
+    response = userData~response
+    statusCode = response~getStatus
+    if statusCode = 200 then
+      call setCheckGraphicToButton button
+    else do
+      message = "Wrong credentials!" .endOfLine
+      message ||= "Status Code:" statusCode .endOfLine
+      message ||= "Server Response:" response~getBody~toString
+      call showPopup message
+      button~setGraphic(.nil)
+    end
+  end
+  else do
+    /* no response, so method "failed" invoked this runnable */
+    say "exc"
+    exception = userData~exception
+    message = "The Server could not be reached!" .endOfLine
+    message ||= "Message:" exception~getMessage .endOfLine
+    message ||= "Cause:" exception~getCause .endOfLine
+    message ||= "Stack Trace:" exception~getStackTrace .endOfLine
+    call showPopup message
+    button~setGraphic(.nil)
+  end
+
+/**
+ * Connects via JDBC to a Database
+ *
+ * @param type - Database type, e.g. mysql or postgresql
+ * @param host - Host or IP address of the Database
+ * @param user - Username of the Database
+ * @param password - Password for the given User
+ * @param dbName - The name of the Database
+ * @param [port] - The Port number for this connection
+ * @return <code>java.sql.Connection</code>
+ */
+::routine dbConnect
+  use arg type, host, user, password, dbName, port
+  /* Assemble the Connection String from the given information */
+  url = "jdbc:" || type || "://" || host
+  if port <> "PORT" then -- if the port was not provided as argument, ooRexx will assign uppercase PORT to variable port
+     url ||= ":" || port
+  url ||= "/" || dbName
+  /* Get the JDBC-Driver */
+  driver = .bsf~new("com." || type || ".jdbc.Driver")
+  .DriverManager~registerDriver(driver)
+  /* Build the Connection*/
+  connection = .DriverManager~getConnection(url, user, password)
+  return connection
+
+
+/**
+ * Displays a JavaFX Popup with the error message as expandable content
+ *
+ * @param message - The printed error message
+ */
+::routine showPopup
+  use strict arg message
+  alert = .bsf~new("javafx.scene.control.Alert", .AlertType~ERROR)
+  alert~setTitle("An Error occurred")
+  alert~setHeaderText("An Error occurred");
+  alert~setContentText("Ooops, something went wrong! Have a look at the error message below:" .endOfLine)
+  expContent = .bsf~new("javafx.scene.layout.GridPane")
+  textArea = .bsf~new("javafx.scene.control.TextArea", message)
+  textArea~wrapText = .true
+  expContent~add(textArea, 0, 1)
+  /* Set expandable Exception into the dialog pane */
+  alert~getDialogPane~~setExpandableContent(expContent) -
+                     ~~setExpanded(.true)
+  alert~showAndWait
+
+
+/**
+ * Sets an indeterminate ProgressIndicator as graphic to the specified Button
+ *
+ * @param button - The reference to a JavaFX Button
+ */
+::routine setLoadingSymbolToButton
+  use arg button
+  loadingSymbol = .bsf~new("javafx.scene.control.ProgressIndicator", -1.0)      -- indeterminate progress
+  loadingSymbol~prefHeight = 20.0                                   -- resize the loading symbol
+  loadingSymbol~prefWidth  = 20.0
+  button~graphic = loadingSymbol             -- set the progress indicator as image for the Button
+
+
+/**
+ * Sets a Tick mark as graphic to the specified Button
+ *
+ * @param button - The reference to a JavaFX Button
+ */
+::routine setCheckGraphicToButton
+  use arg button
+  /* create a tick mark using FontAwesome */
+  checkSymbol = .bsf~new("de.jensd.fx.glyphs.materialicons.MaterialIconView", .MaterialIcon~CHECK)
+  button~graphic = checkSymbol
+
+
+/**
+ * Reads the contents of .jsonLocation defined in the main app and appends the provided Rexx Object
+ *
+ * @param rxObj - A Rexx Object which will be converted to Json
+ * @param type - Can be either "Database" or "ServiceNow"
+ */
+::routine saveRexxObjToJson
+  use strict arg rxObj, type
+  /* load a fresh copy of the json file as a Rexx string */
+  jsonStream = .stream~new(.jsonLocation)
+  jsonLength = jsonStream~chars
+  jsonString = jsonStream~charIn(1, jsonLength)
+  /* convert the Rexx string with json syntax to a Rexx object */
+  jsonEngine = .json~new
+  tmpObj = jsonEngine~fromJson(jsonString)
+  /* create a new jsonObj with queues instead of the generated arrays and import the existing data from tmpObj
+     queues offer the "push" method, with which new items land on top of the collection */
+  jsonObj = .stringTable~new
+  jsonObj~Database = .queue~new
+  jsonObj~Database~appendAll(tmpObj~Database)
+  jsonObj~ServiceNow = .queue~new
+  jsonObj~ServiceNow~appendAll(tmpObj~ServiceNow)
+  /* prepend our argument `rxObj` based on the type to the `jsonObj` */
+  select
+    when type = "Database" then
+      jsonObj~Database~push(rxObj)
+    when type = "ServiceNow" then
+      jsonObj~ServiceNow~push(rxObj)
+    otherwise
+      raise syntax 40.900 array("Bad Type. Use either `Database` or `ServiceNow`!")
+  end
+  /* convert `jsonObj` back to a string and write it to the jsonStream */
+  jsonString = jsonEngine~toJson(jsonObj)
+  jsonStream~open("write replace")    -- open the stream with write access and replace its content when writing
+  loop line over jsonString
+    jsonStream~lineOut(line)
+  end
+  jsonStream~close                    -- release the lock on this file
+
+
+
+
+::requires "ooRexx/json-rgf.cls"      -- get JSON Support
