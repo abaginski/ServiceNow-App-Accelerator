@@ -63,58 +63,85 @@ syntax:
        ~~show                   -- show the GUI
 
   /* combobox default selections as this is not possible in fxml */
+
   databaseType = .my.app~SAA.fxml~databaseType~getSelectionModel
   databaseType~select(0)        -- autoselect the first 0-based value
   manageCombobox = .my.app~SAA.fxml~manageCombobox~getSelectionModel
   manageCombobox~select(0)
 
 
-
+/*
   TabPane = .my.app~SAA.fxml~mainTabPane
   SelectionModel = TabPane~getSelectionModel
   SelectionModel~selectNext
-
+*/
 /**
- * "Stop" is called automatically when shutting down the GUI
+ * "Stop" is called automatically by the FX event loop when shutting down the GUI
  */
 ::method stop
   /* Unirest starts a background event loop until you manually shutdown all the threads by invoking shutdown */
   .Unirest~shutdown
 
+
+
 /**
-  * The class "Database" holds the schema information about one database
-  */
+ * The class "Database" holds the schema information about one database
+ */
 ::class Database
 ::attribute tables
+/**
+ * Constructor method
+ *
+ * @param dbName - Name of the Database
+ */
 ::method init
 /* save the argument as a class variable with the name "dbName" */
   expose dbName tables
   use arg dbName
   tables = .array~new
 
+/**
+ * Adds a <code>DbTable</code> to the `tables` collection
+ *
+ * @param table - An instance of the DbTable class defined in this file
+ */
 ::method addTable
   expose tables
   use arg table
   tables~append(table)
 
+
 /**
-  * The class "dbTable" holds the meta information of a database table
-  */  
+ * The class "dbTable" holds the meta information of a database table
+ */
 ::class DbTable
 ::attribute name
 ::attribute columns
+
+/**
+ * Constructor method
+ *
+ * @param name - Name of the Table
+ */
 ::method init
   expose name columns
   use arg name
   columns = .array~new
 
+/**
+ * Adds a <code>Column</code> to the `columns` collection
+ *
+ * @param column - An instance of the Column class defined in this file
+ */
 ::method addColumn
   expose columns
   use arg column
   columns~append(column)
 
-  
-  
+
+/**
+ * The `Column` class holds all information about one column of one table of one database.
+ */
 ::class Column
 ::attribute name
 ::attribute field

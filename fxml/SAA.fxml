@@ -31,7 +31,7 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="50.0" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@SAA.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
    <!-- the controller file holds all onAction target routines of this fxml file -->
-   <fx:script source="SAA-controller.rxj" />
+   <fx:script source="../ooRexx/SAA-controller.rxj" />
    <children>
       <TabPane fx:id="mainTabPane" maxWidth="200.0" minHeight="50.0" minWidth="50.0" prefHeight="400.0" prefWidth="600.0" rotateGraphic="true" side="LEFT" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <tabs>
