@@ -5,36 +5,68 @@
  *
  * @author Adrian Baginski, BSc (WU)
  * @version 1.0, 2017-08-27
+ *---------------------- Apache Version 2.0 license -------------------------
+ *        Copyright 2017 Adrian Baginski
+ *
+ *        Licensed under the Apache License, Version 2.0 (the "License");
+ *        you may not use this file except in compliance with the License.
+ *        You may obtain a copy of the License at
+ *
+ *            http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *        Unless required by applicable law or agreed to in writing, software
+ *        distributed under the License is distributed on an "AS IS" BASIS,
+ *        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *        See the License for the specific language governing permissions and
+ *        limitations under the License.
+ *-----------------------------------------------------------------------------
  */
 
 /* in case an error occurres, jump to `Syntax:` expression for custom error handling */
 signal on syntax
+
 /* parse operating system and filepath of this script */
 parse source os . absoluteFilepath
+
 /* add all jars from the java directory to the classpath to make use of the provided classes */
 appDirectory = filespec("Location", absoluteFilepath)   -- determine path to this Rexx program
 javaFolder   = appDirectory || "java" || .file~separator
 call addJarsFromDirToClasspath javaFolder
 /* exit this program if the return value of the latest routine call returned "true" */
 if result = .true then exit
+
 /* static class imports */
+call bsf.import "javafx.beans.value.ChangeListener", "ChangeListener"
 call bsf.import "javafx.fxml.FXMLLoader", "FXMLLoader"
 call bsf.import "javafx.scene.text.Font", "Font"
+call bsf.import "javafx.util.Callback", "fxCallback"
+call bsf.import "javafx.collections.FXCollections", "FXCollections"
+call bsf.import "javafx.beans.property.SimpleStringProperty",  "SimpleStringProperty"
+call bsf.import "javafx.beans.property.SimpleIntegerProperty", "SimpleIntegerProperty"
+
+/* adding the controller file as a package to the context allows to use its public routines
+   ::REQUIRES will not work here because the file would be loaded before calling `addJarsFromDirToClasspath`
+   so the static class imports at the top of the file which reference external libraries will cause exceptions */
+package = .package~new("ooRexx/SAA-controller.rxj")
+.context~package~addPackage(package)
+
 /* prepare the URL class loader for the root directory of this application */
 jfile = .bsf~new("java.io.File", appDirectory)
 urlAppDir = jfile~toUri~toUrl
 .local~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+
 /* setup environment variables */
 .environment~jsonLocation = "ooRexx/credentials.json"
+
 /* load fonts
    one could also use @font-face in css to load fonts, but as of 2017-08-24 there is a bug in JavaFX 8 if the
    path to the fonts has spaces in it. That is why it is safer to use this method
-   see https://stackoverflow.com/questions/33973921/javafx-font-face-css-error-loadstylesheetunprivileged
-*/
+   see https://stackoverflow.com/questions/33973921/javafx-font-face-css-error-loadstylesheetunprivileged */
 .Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquindark-regular.ttf"), 14)
 .Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquin-regular.ttf")    , 14)
+
 /* launch the JavaFX Application Thread */
-.environment~Application = bsfCreateRexxProxy(.RxDocHandler~new,,"javafx.application.Application")
+.environment~Application = bsfCreateRexxProxy(.RxApplication~new,,"javafx.application.Application")
 .Application~launch(.Application~getClass,.nil)           -- invoke the "start" Method of .RxDocHandler
 exit 0
 
@@ -52,53 +84,199 @@ syntax:
 /**
   * The main GUI class
   */
-::class RxDocHandler
+::class RxApplication
 ::method start    -- will be invoked by the "launch" method
   use arg stage   -- we get the primary stage to use for our UI
+  stage~title = "ServiceNow App Accelerator"
   sceneFXMLUrl = .appClzLdr~findResource("fxml/SAA.fxml")
   sceneFXML    = .FXMLLoader~load(sceneFXMLUrl)   -- load the fxml document
+  /* import all static classes in the controller file */
   /* create a scene from the FXML DOM and assign it to the stage */
   scene = .bsf~new("javafx.scene.Scene", sceneFXML) -- create a scene for our document
+  self~setUpDefaultValues
+  self~setUpListeners
+  /* create a new instance of the JFXTableManager Class in scope "local"
+     to make it accessible from anywhere in this file */
+  .local~TableManager = .JFXTableManager~new
+  /* show the GUI */
   stage~~setScene(scene) -
-       ~~show                   -- show the GUI
+       ~~show
 
-  /* combobox default selections as this is not possible in fxml */
-
-  databaseType = .my.app~SAA.fxml~databaseType~getSelectionModel
-  databaseType~select(0)        -- autoselect the first 0-based value
-  manageCombobox = .my.app~SAA.fxml~manageCombobox~getSelectionModel
-  manageCombobox~select(0)
-
-
-/*
   TabPane = .my.app~SAA.fxml~mainTabPane
   SelectionModel = TabPane~getSelectionModel
-  SelectionModel~selectNext
-*/
+  SelectionModel~~selectNext~~selectNext
+
 /**
  * "Stop" is called automatically by the FX event loop when shutting down the GUI
  */
 ::method stop
-  /* Unirest starts a background event loop until you manually shutdown all the threads by invoking shutdown */
+  /* Unirest starts a background event loop until you manually shutdown all the threads by invoking `shutdown` */
   .Unirest~shutdown
+
+/**
+ * Points each combo box to the first value as this is not possible in FXML
+ */
+::method setUpDefaultValues
+  comboBoxes = .my.app~SAA.fxml~databaseType, .my.app~SAA.fxml~manageCombobox
+  loop comboBox over comboBoxes
+    comboBox~getSelectionModel~select(0)      -- autoselect the first 0-based value
+  end
+
+/**
+ * Sets change listener to various controls of the FXML file
+ */
+::method setUpListeners
+  /* add a change listener to the "manage" combobox */
+  rexxProxy = bsfCreateRexxProxy(.manageComboboxChangeListener~new,,.ChangeListener)
+  .my.app~SAA.fxml~manageCombobox~valueProperty~addListener(rexxProxy)
+  /* add a change listener to the TabPane in the "Configuration" Tab
+    so we can update the data in the "Manage" Sub-Tab every time the user visits this Tab */
+  rexxProxy = bsfCreateRexxProxy(.configurationTabPaneChangeListener~new,,.ChangeListener)
+  configurationTabPane = .my.app~SAA.fxml~configurationTabPane
+  configurationTabPane~getSelectionModel~selectedItemProperty~addListener(rexxProxy)
+  /* add a change listener to the main TabPane
+    so we can update both ComboBoxes in the "Import Data" Tab each time the user visits that Tab */
+  rexxProxy = bsfCreateRexxProxy(.mainTabPaneChangeListener~new,,.ChangeListener)
+  mainTabPane = .my.app~SAA.fxml~mainTabPane
+  mainTabPane~getSelectionModel~selectedItemProperty~addListener(rexxProxy)
 
 
 
 /**
- * The class "Database" holds the schema information about one database
+ * A change listener class for the control `manageCombobox` in the `Manage` Tab
+ */
+::class manageComboboxChangeListener
+/**
+ * This method gets invoked when the value of the `manageCombobox` has changed
+ * It clears the values of the the right table depending on the selection and fills it with fresh data
+ *
+ * @param observable - <code>javafx.beans.value.ObservableValue</code>
+ * @param oldValue   - The value of the control before the change
+ * @param newValue   - The current value after it has changed
+ */
+::method changed
+  use arg observable, oldValue, newValue
+  .TableManager~showAndFill(newValue)
+
+
+
+/**
+ * A change listener class for the JFXTabPane `configurationTabPane`
+ */
+::class configurationTabPaneChangeListener
+/**
+ * This class will reload the displayed Table when the user selects the "Manage" Tab
+ *
+ * @param observable - <code>javafx.beans.value.ObservableValue</code>
+ * @param oldValue   - The Tab before the change
+ * @param newValue   - The current Tab after it has changed
+ */
+::method changed
+  use arg observable, oldValue, newValue
+  if newValue~getText = "Manage" then do
+    selectedComboboxItem = .my.app~SAA.fxml~manageCombobox~getSelectionModel~getSelectedItem
+    .TableManager~showAndFill(selectedComboboxItem)
+  end
+
+
+
+/**
+ * A change listener class for the main Tab Pane
+ */
+::class mainTabPaneChangeListener
+/**
+ * Refresh the items of both ComboBoxes on the "Import data" Tab when the user visits it
+ *
+ * @param observable - <code>javafx.beans.value.ObservableValue</code>
+ * @param oldValue   - The Tab before the change
+ * @param newValue   - The current Tab after it has changed
+ */
+::method changed
+  use arg observable, oldValue, newValue
+  if newValue~getText~word(1) = "Import" then do
+    /* get a reference to the combo boxes */
+    databaseCombobox = .my.app~SAA.fxml~importDatabase
+    servicenowCombobox = .my.app~SAA.fxml~importServicenow
+    /* clear the data */
+    loop combobox over databaseCombobox, servicenowCombobox
+      combobox~getItems~clear
+    end
+    jsonObj = getRexxObjFromJson()
+    /* set items for databaseCombobox */
+    items = .FXCollections~observableArrayList
+    loop data over jsonObj~Database
+      text = data~type || ":" || data~host || "/" || data~dbName
+      items~add(text)
+    end
+    databaseCombobox~getItems~addAll(items)
+    /* set items for databaseCombobox */
+    items = .FXCollections~observableArrayList
+    loop data over jsonObj~ServiceNow
+      items~add(data~url)
+    end
+    servicenowCombobox~getItems~addAll(items)
+  end
+
+
+
+/**
+ * The data model class "ServiceNow" holds all attributes that are to be shown in the affiliated Table
+ *  in the `Manage` Tab
+ */
+::class ServiceNow
+::attribute url
+::attribute username
+::attribute password
+/**
+ * Constructor method
+ * Extracts the information of the supplied stringTable and saves them as class attributes
+ *
+ * @param informationDirectory - a <code>stringTable</code> which holds all saved information about
+ *                               a ServiceNow connection as a result from calling <code>getRexxObjFromJson</code>
+ */
+::method init
+  expose url username password
+  use arg informationDirectory
+  if informationDirectory~isA(.stringTable) then do
+    url = informationDirectory~url
+    username = informationDirectory~user
+    password = informationDirectory~pass
+  end
+
+
+
+/**
+ * The class "Database" holds connection and schema information about one database
  */
 ::class Database
+::attribute name
+::attribute type
+::attribute host
+::attribute url
+::attribute port
+::attribute username
+::attribute password
 ::attribute tables
 /**
  * Constructor method
+ * Extracts the information of the supplied stringTable and saves them as class attributes
  *
- * @param dbName - Name of the Database
+ * @param informationDirectory - a <code>stringTable</code> which holds all saved information about a Database
+ *                               as a result from calling <code>getRexxObjFromJson</code>
  */
 ::method init
-/* save the argument as a class variable with the name "dbName" */
-  expose dbName tables
-  use arg dbName
+  expose tables name type host url port username password
+  use arg informationDirectory
   tables = .array~new
+  if informationDirectory~isA(.stringTable) then do
+    name     = informationDirectory~dbName
+    type     = informationDirectory~type
+    host     = informationDirectory~host
+    port     = informationDirectory~port
+    url      = informationDirectory~url
+    username = informationDirectory~user
+    password = informationDirectory~pass
+  end
 
 /**
  * Adds a <code>DbTable</code> to the `tables` collection
@@ -111,8 +289,9 @@ syntax:
   tables~append(table)
 
 
+
 /**
- * The class "dbTable" holds the meta information of a database table
+ * The Class "dbTable" holds the meta information of a database table
  */
 ::class DbTable
 ::attribute name
@@ -139,6 +318,7 @@ syntax:
   columns~append(column)
 
 
+
 /**
  * The `Column` class holds all information about one column of one table of one database.
  */
@@ -153,20 +333,190 @@ syntax:
 
 
 
+/**
+ * The class `JFXTableManager` manages both tables from the "Manage" Tab
+ */
+::class JFXTableManager
+/**
+ * Constructor method
+ */
+::method init
+  expose databaseTable servicenowTable
+  /* get a reference of both tables and save them in the class */
+  databaseTable   = .my.app~SAA.fxml~configurationManageDatabases
+  servicenowTable = .my.app~SAA.fxml~configurationManageServiceNowInstances
+  self~setUpCellValueFactoryAndRootNode(databaseTable)
+  self~setUpCellValueFactoryAndRootNode(servicenowTable)
+
+/**
+ * Sets up the CellValueFactory for every column in the supplied table
+ * After that, it creates an empty root node for the Table
+ *
+ * @param table - A <code>JFXTreeTableView</code>
+ */
+::method setUpCellValueFactoryAndRootNode private
+  use strict arg table
+  loop column over table~getColumns
+    heading = column~getText
+    factory = .PropertyValueFactory~new(heading)
+    rexxProxy = bsfCreateRexxProxy(factory,,.fxCallback)
+    column~setCellValueFactory(rexxProxy)
+  end
+  /* create an empty TreeObject */
+  RecursiveTreeObject = .bsf~new("com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject")
+  callbackFunction = bsfCreateRexxProxy(.GetChildrenCallback~new,,.fxCallback)
+  root = .bsf~new("com.jfoenix.controls.RecursiveTreeItem", RecursiveTreeObject, callbackFunction)
+  /* expand the root node to automatically display all its child nodes */
+  root~expanded = .true
+  /* set the root node in the table and hide it, because it is empty anyway */
+  table~root = root
+  table~showRoot = .false
+
+/**
+ * Is called by value change listeners whenever the user visits the `Manage` Tab
+ * or changes the value of the manageCombobox.
+ * This method calls a number of functions to show the right table, to fill it with data and to hide the other table
+ *
+ * @param tableDescription - The value of the ComboBox in the `Manage Tab`
+ */
+::method showAndFill
+  expose databaseTable servicenowTable currentTable
+  use strict arg tableDescription
+  /* select the right table based on the second word of the supplied argument */
+  select case tableDescription~word(2)
+    when "Databases" then do
+      currentTable = databaseTable
+      self~showTable(servicenowTable, .false)   -- hide the servicenowTable
+    end
+    when "ServiceNow" then do
+      currentTable = servicenowTable
+      self~showTable(databaseTable, .false)
+    end
+    otherwise
+      raise syntax 40.900 array("Bad value. Cannot refresh the Data in the Table")
+  end
+  self~showTable        -- show currentTable
+  self~clearData        -- clear currentTable
+  self~fillTable        -- fill it with fresh data
+
+/**
+ * Hides or shows the supplied table. If there is none, it will use the current table from the class
+ *
+ * @param table - The <code>JFXTreeTableView</code> to show/hide
+ * @param [show]- .true to show, .false to hide. Default: .true
+ */
+::method showTable private
+  expose currentTable
+  use arg table, show = .true
+  if \table~isA(.bsf) then
+      table = currentTable
+  table~~setManaged(show) -
+       ~~setVisible(show)
+
+/**
+ * Clears the Data from the current Table
+ */
+::method clearData private
+  expose currentTable
+  currentTable~getRoot~getChildren~clear
+
+/**
+ * Retrievs fresh saved Data from the JSON file and displays it in the current Table
+ */
+::method fillTable private
+  expose currentTable
+  jsonObj = getRexxObjFromJson()
+  /* decide based on the number of columns whether this is a Database or ServiceNow table */
+  kind = (currentTable~getColumns~size > 5)~?("Database", "ServiceNow")
+  jsonData = jsonObj[kind~upper]
+  root = currentTable~getRoot
+  /* this callback function retrievs the children of the tree item on call */
+  callbackFunction = bsfCreateRexxProxy(.GetChildrenCallback~new,,.fxCallback)
+  /* extend the Java class RecursiveTreeObject, which is the data model that is used in JFXTreeTableView
+      cf. <b>Note:</b> the data object used in JFXTreeTableView <b>must</b> extends this class
+      https://github.com/jfoenixadmin/JFoenix/blob/master/jfoenix/src/main/java/com/jfoenix/controls/datamodels/treetable/RecursiveTreeObject.java */
+  extendRecursiveTreeObject = bsf.createProxyClass("com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject")
+  /* iterate over the queue - `informationTable` will be a stringTable */
+  loop informationTable over jsonData
+    /* create a Rexx Object of a Rexx Class based on the kind of Table we are trying to fill with data */
+    if kind = "Database" then
+      useClass = .Database
+    else
+      useClass = .ServiceNow
+    rxObj = useClass~new(informationTable)
+    /* box this rexx object as a java proxy class */
+    rexxProxy = bsfCreateRexxProxy(rxObj)
+    /* extend our java class with `RecursiveTreeObject`, as this is required by JFoenix */
+    jObj = extendRecursiveTreeObject~new(rexxProxy)
+    /* create a new instance of the RecursiveTreeItem with our data model and a callback function as parameters */
+    RecursiveTreeItem = .bsf~new("com.jfoenix.controls.RecursiveTreeItem", jObj, callbackFunction)
+    /* attach it to the root node */
+    root~getChildren~add(RecursiveTreeItem)
+  end
+
+
+/**
+ * implements javafx.util.Callback<P,R>(P o)
+ * This class allows instances that remember the message to be sent to the data model instances to
+ *  return the attribute that should be shown in the table cell.
+ */
+::class PropertyValueFactory
+/**
+ * This constructor method saves the attribute name in the class
+ *
+ * attributeName - The name of the Attribute in the data model class
+ */
+::method init
+  expose attributeName
+  use strict arg attributeName
+
+/**
+ * Is called by the Callback Interface whenever the Table needs new Data
+ *
+ * @param CellDataFeatures - is a nested class of <code>TreeTableColumn</code> and holds information about the Table
+ * @return The attribute value from the data model camouflaged as the java proxy class
+ */
+::method call
+  expose attributeName
+  use arg CellDataFeatures          -- an observable value for the ooRexx object boxed in a Java RexxProxy object
+  RecursiveTreeItem = CellDataFeatures~getValue
+  jObj = RecursiveTreeItem~getValue
+  rexxProxy = jObj~getTargetRexxProxy
+  attributeValue = rexxProxy~sendMessage0(attributeName)
+  return .SimpleStringProperty~new(attributeValue)
+
+
+
+/**
+ * Another Callback function for retrieving the children of the data model RecursiveTreeObject
+ */
+::class GetChildrenCallback
+/**
+ * Supplies the caller with the child nodes of RecursiveTreeObject
+ *
+ * @param RecursiveTreeObject - supplied by the caller on Java side. Holds the proxied extended java class `jObj`
+ * @return The children of the parameter
+ */
+::method call
+  use arg RecursiveTreeObject
+  return RecursiveTreeObject~getChildren
+
 /**************************************************************************************************/
 /*                               ROUTINES                                                         */
 /**************************************************************************************************/
 
 /**
- * Inserts the Java archives from the arguments to the classpath and restarts this application to
- * make them accessible and use the classes from those Java archives
+ * Inserts the Java archives from the "java" directory to the classpath and restarts this application
+ * to make the classes of those libraries accessible
  *
  * @param javaDir - The absolute filepath to the directory which holds the required Java archives
  */
 ::routine addJarsFromDirToClasspath
   use strict arg javaDir
+  if \SysFileExists(javaDir) then
+    raise syntax 40.900 array("The supplied argument" javaDir "is not a valid directory!")
   pathExtension = ""
-  /* use a Built-In-Function (BIF) to retrieve all jars from the java directory */
+  /* use a Built-In Function (BIF) to retrieve all jars from the java directory */
   call SysFileTree javaDir, "jars", "F"   -- search for files in java/ and save as a .stem in `jars`
   loop i = 1 to jars.0              -- the 0th entry of a stem holds the number of items
     parse var jars.i . . . . jar    -- remove the first 4 bits of information (date, time, size, access control)
@@ -188,6 +538,7 @@ syntax:
     call value "CLASSPATH", classpath, "ENVIRONMENT"
     return .true
   end
+
 
 
 

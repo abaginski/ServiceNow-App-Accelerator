@@ -285,7 +285,33 @@ call bsf.import "java.lang.Runnable", "Runnable"
  */
 ::routine saveRexxObjToJson
   use strict arg rxObj, type
-  /* load a fresh copy of the json file as a Rexx string */
+  jsonObj = getRexxObjFromJson()
+  /* prepend our argument `rxObj` based on the type to the `jsonObj` */
+  select
+    when type = "Database" then
+      jsonObj~Database~push(rxObj)
+    when type = "ServiceNow" then
+      jsonObj~ServiceNow~push(rxObj)
+    otherwise
+      raise syntax 40.900 array("Bad Type. Use either `Database` or `ServiceNow`!")
+  end
+  /* convert `jsonObj` back to a string and write it to the jsonStream */
+  jsonEngine = .json~new
+  jsonString = jsonEngine~toJson(jsonObj)
+  jsonStream = .stream~new(.jsonLocation)
+  jsonStream~open("write replace")    -- open the stream with write access and replace its content when writing
+  loop line over jsonString
+    jsonStream~lineOut(line)
+  end
+  jsonStream~close                    -- release the lock on this file
+
+/**
+ * Reads the JSON String from the hard drive and replaces the used Array with an Queue
+ *
+ * @return jsonObj - A Rexx Object which holds all information from the Json file located in .jsonLocation
+ */
+::routine getRexxObjFromJson public
+/* load a fresh copy of the json file as a Rexx string */
   jsonStream = .stream~new(.jsonLocation)
   jsonLength = jsonStream~chars
   jsonString = jsonStream~charIn(1, jsonLength)
@@ -299,24 +325,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
   jsonObj~Database~appendAll(tmpObj~Database)
   jsonObj~ServiceNow = .queue~new
   jsonObj~ServiceNow~appendAll(tmpObj~ServiceNow)
-  /* prepend our argument `rxObj` based on the type to the `jsonObj` */
-  select
-    when type = "Database" then
-      jsonObj~Database~push(rxObj)
-    when type = "ServiceNow" then
-      jsonObj~ServiceNow~push(rxObj)
-    otherwise
-      raise syntax 40.900 array("Bad Type. Use either `Database` or `ServiceNow`!")
-  end
-  /* convert `jsonObj` back to a string and write it to the jsonStream */
-  jsonString = jsonEngine~toJson(jsonObj)
-  jsonStream~open("write replace")    -- open the stream with write access and replace its content when writing
-  loop line over jsonString
-    jsonStream~lineOut(line)
-  end
-  jsonStream~close                    -- release the lock on this file
+  jsonStream~close
+  return jsonObj
 
 
-
-
+::requires "BSF.CLS"
 ::requires "ooRexx/json-rgf.cls"      -- get JSON Support

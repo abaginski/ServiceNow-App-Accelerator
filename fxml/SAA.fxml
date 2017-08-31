@@ -9,6 +9,7 @@
 <?import com.jfoenix.controls.JFXTextField?>
 <?import com.jfoenix.controls.JFXTreeTableColumn?>
 <?import com.jfoenix.controls.JFXTreeTableView?>
+<?import javafx.scene.control.TreeTableView?>
 <?import java.lang.String?>
 <?import javafx.collections.FXCollections?>
 <?import javafx.geometry.Insets?>
@@ -86,7 +87,7 @@
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <JFXTabPane prefHeight="500.0" prefWidth="783.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <JFXTabPane fx:id="configurationTabPane" prefHeight="500.0" prefWidth="783.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <tabs>
                               <Tab closable="false" text="Database">
                                 <content>
@@ -330,20 +331,26 @@
                                                       <Insets top="15.0" />
                                                    </VBox.margin>
                                                      <columns>
-                                                        <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" resizable="false" text="Type" />
-                                                        <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" resizable="false" text="Host" />
-                                                        <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0" resizable="false" text="Port" />
-                                                      <JFXTreeTableColumn minWidth="133" resizable="false" text="Name" />
-                                                      <JFXTreeTableColumn minWidth="133" resizable="false" text="Username" />
-                                                      <JFXTreeTableColumn minWidth="133" resizable="false" text="Password" />
+                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Type" />
+                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Host" />
+                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0"  text="Port" />
+                                                      <JFXTreeTableColumn text="Name" />
+                                                      <JFXTreeTableColumn text="Username" />
+                                                      <JFXTreeTableColumn text="Password" />
                                                     </columns>
+                                                   <columnResizePolicy>
+                                                      <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                   </columnResizePolicy>
                                                 </JFXTreeTableView>
-                                                <JFXTreeTableView fx:id="configurationManageDatabases1" layoutX="50.0" layoutY="150.0" managed="false" prefHeight="260.0" visible="false">
+                                                <JFXTreeTableView fx:id="configurationManageServiceNowInstances" layoutX="50.0" layoutY="150.0" managed="false" prefHeight="260.0" visible="false">
                                                    <columns>
-                                                      <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" resizable="false" text="URL" />
-                                                      <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" resizable="false" text="Username" />
-                                                      <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0" resizable="false" text="Password" />
+                                                      <JFXTreeTableColumn text="URL" />
+                                                      <JFXTreeTableColumn text="Username" />
+                                                      <JFXTreeTableColumn text="Password" />
                                                    </columns>
+                                                   <columnResizePolicy>
+                                                      <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                   </columnResizePolicy>
                                                 </JFXTreeTableView>
                                              </children>
                                              <padding>
@@ -376,7 +383,7 @@
                                     <VBox prefWidth="760.0">
                                        <children>
                                           <Label lineSpacing="6.0" minHeight="-Infinity" text="Please select one Database which will be merged to one ServiceNow instance. After that you will be connected to the Database and provided with a list of all found tables, where you can choose which one you like to import." textAlignment="JUSTIFY" wrapText="true" />
-                                          <HBox fx:id="databasePortpane12" maxWidth="360.0">
+                                          <HBox maxWidth="360.0">
                                              <children>
                                                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Database">
                                                    <HBox.margin>
@@ -390,7 +397,7 @@
                                                 <Insets top="10.0" />
                                              </VBox.margin>
                                           </HBox>
-                                          <HBox fx:id="databasePortpane121" layoutX="50.0" layoutY="96.0" maxWidth="360.0">
+                                          <HBox layoutX="50.0" layoutY="96.0" maxWidth="360.0">
                                              <children>
                                                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text="ServiceNow">
                                                    <HBox.margin>
@@ -404,7 +411,7 @@
                                                 <Insets top="5.0" />
                                              </VBox.margin>
                                           </HBox>
-                                          <JFXButton ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" text="Connect">
+                                          <JFXButton ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" text="Connect" onAction="call startImport arg(arg())">
                                              <VBox.margin>
                                                 <Insets top="20.0" />
                                              </VBox.margin>
