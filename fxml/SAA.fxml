@@ -9,16 +9,20 @@
 <?import com.jfoenix.controls.JFXTextField?>
 <?import com.jfoenix.controls.JFXTreeTableColumn?>
 <?import com.jfoenix.controls.JFXTreeTableView?>
-<?import javafx.scene.control.TreeTableView?>
+<?import com.jfoenix.validation.RequiredFieldValidator?>
+<?import com.jfoenix.validation.ValidationFacade?>
+<?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
+<?import de.jensd.fx.glyphs.materialicons.MaterialIconView?>
 <?import java.lang.String?>
 <?import javafx.collections.FXCollections?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -28,15 +32,16 @@
 <?import javafx.scene.text.TextFlow?>
 <?language rexx?>
 
-<!-- <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?> -->
-
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="50.0" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@SAA.css" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="50.0" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@SAA.css" xmlns="http://javafx.com/javafx/8.0.102" xmlns:fx="http://javafx.com/fxml/1">
    <!-- the controller file holds all onAction target routines of this fxml file -->
    <fx:script source="../ooRexx/SAA-controller.rxj" />
    <children>
       <TabPane fx:id="mainTabPane" maxWidth="200.0" minHeight="50.0" minWidth="50.0" prefHeight="400.0" prefWidth="600.0" rotateGraphic="true" side="LEFT" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <tabs>
           <Tab text="Home">
+            <graphic>
+               <FontAwesomeIconView glyphName="HOME" styleClass="tabGraphic" />
+            </graphic>
             <content>
                   <ScrollPane>
                      <content>
@@ -50,7 +55,7 @@
                                     <Font size="22.0" />
                                  </font>
                               </Text>
-                              <Label lineSpacing="6.0" text="This ooRexx based application will help you to extract local databases into your ServiceNow instance while avoiding unnecessary complexity. Simply follow the instructions by connecting to the database and your ServiceNow instance and start uploading. Be assured that all data will be treated in confidence and not saved or shared in any way persistantly." textAlignment="JUSTIFY" wrapText="true" />
+                              <Label lineSpacing="4.0" text="This ooRexx based application will help you to extract local databases into your ServiceNow instance while avoiding unnecessary complexity. Simply follow the instructions by connecting to the database and your ServiceNow instance and start uploading. Be assured that all data will be treated in confidence and not saved or shared in any way persistantly." textAlignment="JUSTIFY" wrapText="true" />
                               <TextFlow lineSpacing="6.0" textAlignment="JUSTIFY">
                                  <children>
                                     <Label text="Should you encounter any unforeseen errors, do not hesitate to contact">
@@ -84,12 +89,15 @@
             </content>
           </Tab>
             <Tab text="Configuration">
+               <graphic>
+                  <MaterialIconView glyphName="BUILD" styleClass="tabGraphic" />
+               </graphic>
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <JFXTabPane fx:id="configurationTabPane" prefHeight="500.0" prefWidth="783.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <tabs>
-                              <Tab closable="false" text="Database">
+                              <Tab text="Database">
                                 <content>
                                     <ScrollPane>
                                        <content>
@@ -104,7 +112,7 @@
                                                    </font>
                                                 </Text>
                                                 <Label text="Please provide the required database related information below and ensure that the ServiceNow App Accelerator is allowed to access the given database." wrapText="true" />
-                                                <HBox fx:id="databasePortpane1" layoutX="10.0" layoutY="173.0" maxWidth="360.0">
+                                                <HBox layoutX="10.0" layoutY="173.0" maxWidth="360.0">
                                                    <children>
                                                       <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Database type">
                                                          <HBox.margin>
@@ -126,7 +134,7 @@
                                                       <Insets top="10.0" />
                                                    </VBox.margin>
                                                 </HBox>
-                                                <HBox fx:id="databasePortpane11" layoutX="50.0" layoutY="125.0" maxWidth="360.0">
+                                                <HBox layoutX="50.0" layoutY="125.0" maxWidth="360.0">
                                                    <children>
                                                       <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Host">
                                                          <HBox.margin>
@@ -135,9 +143,9 @@
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
                                                       <JFXTextField fx:id="databaseHost" prefWidth="250.0" promptText="localhost or IP address">
-                                                         <HBox.margin>
-                                                            <Insets />
-                                                         </HBox.margin>
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
                                                       </JFXTextField>
                                                    </children>
                                                    <VBox.margin>
@@ -151,7 +159,7 @@
                                                             <Insets top="5.0" />
                                                          </HBox.margin></Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="databasePort" prefWidth="250.0" promptText="optional Port number" />
+                                                      <JFXTextField fx:id="databasePort" prefWidth="250.0" promptText="(optional) Port number" />
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets right="10.0" top="10.0" />
@@ -165,7 +173,11 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="databaseDatabase" prefWidth="250.0" promptText="enter Database name" />
+                                                      <JFXTextField fx:id="databaseDatabase" prefWidth="250.0" promptText="enter Database name">
+                                                        <validators>
+                                                           <RequiredFieldValidator />
+                                                        </validators>
+                                                      </JFXTextField>
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets right="10.0" top="10.0" />
@@ -179,7 +191,11 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="databaseUsername" prefWidth="250.0" promptText="enter Username" />
+                                                      <JFXTextField fx:id="databaseUsername" prefWidth="250.0" promptText="enter Username">
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </JFXTextField>
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets right="10.0" top="10.0" />
@@ -204,8 +220,12 @@
                                                       <Insets top="30.0" />
                                                    </VBox.margin>
                                                    <children>
-                                                      <JFXButton ButtonType="RAISED" defaultButton="true" fx:id="saveDatabaseButton" mnemonicParsing="false" text="Save" onAction="call saveDatabase arg(arg())"/>
-                                                      <JFXButton ButtonType="RAISED" styleClass="info-button" fx:id="testDatabaseConnectionButton" text="Test connection" onAction="call testDatabaseConnection arg(arg())">
+                                                      <JFXButton fx:id="saveDatabaseButton" ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" onAction="call saveDatabase arg(arg())" text="Save">
+                                                         <graphic>
+                                                            <FontAwesomeIconView glyphName="SAVE" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                      <JFXButton fx:id="testDatabaseConnectionButton" ButtonType="RAISED" onAction="call testDatabaseConnection arg(arg())" styleClass="info-button" text="Test connection">
                                                          <HBox.margin>
                                                             <Insets left="25.0" />
                                                          </HBox.margin>
@@ -221,7 +241,7 @@
                                     </ScrollPane>
                                 </content>
                               </Tab>
-                              <Tab closable="false" text="ServiceNow">
+                              <Tab text="ServiceNow">
                                 <content>
                                     <ScrollPane prefWidth="600.0">
                                        <content>
@@ -244,7 +264,11 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/" />
+                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/" text="https://dev36664.service-now.com/">
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </JFXTextField>
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="25.0" />
@@ -258,7 +282,11 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance" />
+                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance" text="admin">
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </JFXTextField>
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="10.0" />
@@ -272,7 +300,11 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance" />
+                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance" text="zPfH5DreCSpq">
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </JFXPasswordField>
                                                    </children>
                                                    <VBox.margin>
                                                       <Insets top="10.0" />
@@ -280,8 +312,12 @@
                                                 </HBox>
                                                 <HBox>
                                                    <children>
-                                                      <JFXButton ButtonType="RAISED" onAction="call saveServiceNow arg(arg())" fx:id="saveServiceNowButton" defaultButton="true" mnemonicParsing="false" text="Save" />
-                                                      <JFXButton ButtonType="RAISED" onAction="call testServiceNow arg(arg())" fx:id="testServiceNowButton" styleClass="info-button" text="Test connection">
+                                                      <JFXButton fx:id="saveServiceNowButton" ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" onAction="call saveServiceNow arg(arg())" text="Save">
+                                                         <graphic>
+                                                            <FontAwesomeIconView glyphName="SAVE" />
+                                                         </graphic>
+                                                      </JFXButton>
+                                                      <JFXButton fx:id="testServiceNowButton" ButtonType="RAISED" onAction="call testServiceNow arg(arg())" styleClass="info-button" text="Test connection">
                                                          <HBox.margin>
                                                             <Insets left="25.0" />
                                                          </HBox.margin>
@@ -333,7 +369,7 @@
                                                      <columns>
                                                      <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Type" />
                                                      <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Host" />
-                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0"  text="Port" />
+                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0" text="Port" />
                                                       <JFXTreeTableColumn text="Name" />
                                                       <JFXTreeTableColumn text="Username" />
                                                       <JFXTreeTableColumn text="Password" />
@@ -342,7 +378,7 @@
                                                       <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                                    </columnResizePolicy>
                                                 </JFXTreeTableView>
-                                                <JFXTreeTableView fx:id="configurationManageServiceNowInstances" layoutX="50.0" layoutY="150.0" managed="false" prefHeight="260.0" visible="false">
+                                                <JFXTreeTableView fx:id="configurationManageServiceNowInstances" managed="false" prefHeight="260.0" visible="false">
                                                    <columns>
                                                       <JFXTreeTableColumn text="URL" />
                                                       <JFXTreeTableColumn text="Username" />
@@ -368,86 +404,206 @@
               </content>
             </Tab>
             <Tab text="Import data">
+               <graphic>
+                  <MaterialIconView glyphName="CLOUD_UPLOAD" styleClass="tabGraphic" />
+               </graphic>
               <content>
                   <AnchorPane>
                      <children>
                         <Text fontSmoothingType="LCD" layoutX="38.0" layoutY="45.0" strokeType="OUTSIDE" strokeWidth="0.0" styleClass="h1" text="Import data">
-                           <font>
+                        <font>
                               <Font size="22.0" />
                            </font>
                         </Text>
-                        <JFXTabPane styleClass="no-tab-header" AnchorPane.topAnchor="20.0">
+                        <JFXTabPane fx:id="importTabPane" styleClass="no-tab-header" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
+
                            <tabs>
                               <Tab>
                                  <content>
-                                    <VBox prefWidth="760.0">
-                                       <children>
-                                          <Label lineSpacing="6.0" minHeight="-Infinity" text="Please select one Database which will be merged to one ServiceNow instance. After that you will be connected to the Database and provided with a list of all found tables, where you can choose which one you like to import." textAlignment="JUSTIFY" wrapText="true" />
-                                          <HBox maxWidth="360.0">
+                                    <ScrollPane>
+                                       <content>
+                                          <VBox fx:id="importStep1VBox" prefWidth="760.0">
                                              <children>
-                                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Database">
-                                                   <HBox.margin>
-                                                      <Insets top="5.0" />
-                                                   </HBox.margin>
-                                                </Text>
-                                                <Pane HBox.hgrow="ALWAYS" />
-                                                <JFXComboBox fx:id="importDatabase" editable="false" prefWidth="250.0" promptText="please choose" />
-                                             </children>
-                                             <VBox.margin>
-                                                <Insets top="10.0" />
-                                             </VBox.margin>
-                                          </HBox>
-                                          <HBox layoutX="50.0" layoutY="96.0" maxWidth="360.0">
-                                             <children>
-                                                <Text strokeType="OUTSIDE" strokeWidth="0.0" text="ServiceNow">
-                                                   <HBox.margin>
-                                                      <Insets top="5.0" />
-                                                   </HBox.margin>
-                                                </Text>
-                                                <Pane HBox.hgrow="ALWAYS" />
-                                                <JFXComboBox fx:id="importServiceNow" editable="false" prefWidth="250.0" promptText="please choose" />
-                                             </children>
-                                             <VBox.margin>
-                                                <Insets top="5.0" />
-                                             </VBox.margin>
-                                          </HBox>
-                                          <JFXButton ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" text="Connect" onAction="call startImport arg(arg())">
-                                             <VBox.margin>
-                                                <Insets top="20.0" />
-                                             </VBox.margin>
-                                          </JFXButton>
-                                          <VBox fx:id="databaseAfterConnect" managed="false" visible="false">
-                                             <children>
-                                                <Label text="Successfully connected! Which of the following tables would you like to import?">
-                                                   <VBox.margin>
-                                                      <Insets bottom="10.0" top="5.0" />
-                                                   </VBox.margin>
-                                                </Label>
-                                                <VBox fx:id="databaseCheckboxPane">
+                                                <Label lineSpacing="6.0" text="Please select one Database which will be merged to one ServiceNow instance. After that you will be connected to the Database and provided with a list of all found tables, where you can choose which one you like to import." textAlignment="JUSTIFY" wrapText="true" />
+                                                <HBox maxWidth="500.0">
                                                    <children>
-                                                      <JFXCheckBox fx:id="databaseSelectAll" mnemonicParsing="false" text="Select all">
-                                                         <font>
-                                                            <Font name="System Italic" size="12.0" />
-                                                         </font>
-                                                      </JFXCheckBox>
+                                                      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Database">
+                                                         <HBox.margin>
+                                                            <Insets top="6.0" />
+                                                         </HBox.margin>
+                                                      </Text>
+                                                      <Pane HBox.hgrow="ALWAYS" />
+                                                      <ValidationFacade maxHeight="10.0">
+                                                         <control>
+                                                            <JFXComboBox fx:id="importDatabase" editable="false" prefWidth="390.0" promptText="please choose" />
+                                                         </control>
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </ValidationFacade>
                                                    </children>
                                                    <VBox.margin>
-                                                      <Insets top="5.0" />
+                                                      <Insets top="10.0" />
                                                    </VBox.margin>
-                                                </VBox>
-                                                <JFXButton ButtonType="RAISED" mnemonicParsing="false" text="Start">
+                                                </HBox>
+                                                <HBox maxWidth="500.0">
+                                                   <children>
+                                                      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="ServiceNow">
+                                                         <HBox.margin>
+                                                            <Insets top="6.0" />
+                                                         </HBox.margin>
+                                                      </Text>
+                                                      <Pane HBox.hgrow="ALWAYS" />
+                                                      <ValidationFacade maxHeight="10.0">
+                                                         <control>
+                                                            <JFXComboBox fx:id="importServiceNow" editable="false" prefWidth="390.0" promptText="please choose" />
+                                                         </control>
+                                                         <validators>
+                                                            <RequiredFieldValidator />
+                                                         </validators>
+                                                      </ValidationFacade>
+                                                   </children>
+                                                </HBox>
+                                                <JFXButton ButtonType="RAISED" defaultButton="true" mnemonicParsing="false" onAction="call prepareImport arg(arg())" text="Connect">
                                                    <VBox.margin>
-                                                      <Insets top="15.0" />
+                                                      <Insets top="20.0" />
                                                    </VBox.margin>
                                                 </JFXButton>
+                                                <VBox fx:id="databaseAfterConnect" visible="false">
+                                                   <children>
+                                                      <Label text="Successfully connected! Which of the following tables would you like to import?">
+                                                         <VBox.margin>
+                                                            <Insets bottom="10.0" top="5.0" />
+                                                         </VBox.margin>
+                                                      </Label>
+                                                      <VBox fx:id="databaseCheckboxPane">
+                                                         <children>
+                                                            <JFXCheckBox fx:id="databaseSelectAll" mnemonicParsing="false" onAction="call selectAllCheckboxes arg(arg())" text="Select all">
+                                                               <font>
+                                                                  <Font name="System Italic" size="12.0" />
+                                                               </font>
+                                                            </JFXCheckBox>
+                                                         </children>
+                                                         <VBox.margin>
+                                                            <Insets top="5.0" />
+                                                         </VBox.margin>
+                                                      </VBox>
+                                                      <JFXButton ButtonType="RAISED" mnemonicParsing="false" onAction="call startImport arg(arg())" text="Start">
+                                                         <VBox.margin>
+                                                            <Insets top="15.0" />
+                                                         </VBox.margin>
+                                                      </JFXButton>
+                                                   </children>
+                                                   <opaqueInsets>
+                                                      <Insets />
+                                                   </opaqueInsets>
+                                                   <VBox.margin>
+                                                      <Insets top="20.0" />
+                                                   </VBox.margin>
+                                                </VBox>
                                              </children>
-                                             <opaqueInsets>
-                                                <Insets />
-                                             </opaqueInsets>
-                                             <VBox.margin>
-                                                <Insets top="20.0" />
-                                             </VBox.margin>
+                                             <padding>
+                                                <Insets bottom="20.0" left="40.0" right="20.0" top="30.0" />
+                                             </padding>
                                           </VBox>
+                                       </content>
+                                    </ScrollPane>
+                                 </content>
+                              </Tab>
+                              <Tab>
+                                 <content>
+                                    <VBox prefHeight="453.0" prefWidth="768.0">
+                                       <children>
+                                          <Label minHeight="-Infinity" text="This page will transfer all selected tables from the database with its data to your ServiceNow instance. The logging area and the progress bar will show additional information and inform you once the task has finished." textAlignment="JUSTIFY" wrapText="true">
+                                             <VBox.margin>
+                                                <Insets bottom="20.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <HBox styleClass="importProgressStep">
+                                             <children>
+                                                <Pane fx:id="readingDatabasePane" prefWidth="60.0">
+                                                   <children>
+                                                      <ProgressIndicator prefHeight="34.0" prefWidth="30.0" />
+                                                   </children>
+                                                   <HBox.margin>
+                                                      <Insets left="30.0" />
+                                                   </HBox.margin>
+                                                </Pane>
+                                                <Label text="Reading database table schema">
+                                                   <HBox.margin>
+                                                      <Insets top="5.0" />
+                                                   </HBox.margin>
+                                                </Label>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="30.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <HBox layoutX="50.0" layoutY="100.0" styleClass="importProgressStep">
+                                             <children>
+                                                <Pane fx:id="creatingTablesPane" prefWidth="60.0">
+                                                   <children>
+                                                      <ProgressIndicator prefHeight="34.0" prefWidth="30.0" visible="false" />
+                                                   </children>
+                                                   <HBox.margin>
+                                                      <Insets left="30.0" />
+                                                   </HBox.margin>
+                                                </Pane>
+                                                <Label opacity="0.4" text="Creating ServiceNow tables">
+                                                   <HBox.margin>
+                                                      <Insets top="5.0" />
+                                                   </HBox.margin>
+                                                </Label>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="40.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <HBox layoutX="50.0" layoutY="154.0" styleClass="importProgressStep">
+                                             <children>
+                                                <Pane fx:id="uploadingDataPane" prefWidth="60.0">
+                                                   <children>
+                                                      <ProgressIndicator prefHeight="34.0" prefWidth="30.0" visible="false" />
+                                                   </children>
+                                                   <HBox.margin>
+                                                      <Insets left="30.0" />
+                                                   </HBox.margin>
+                                                </Pane>
+                                                <Label opacity="0.4" text="Uploading data">
+                                                   <HBox.margin>
+                                                      <Insets top="5.0" />
+                                                   </HBox.margin>
+                                                </Label>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="40.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <HBox layoutX="50.0" layoutY="208.0" styleClass="importProgressStep">
+                                             <children>
+                                                <Pane fx:id="allDonePane" prefWidth="60.0">
+                                                   <HBox.margin>
+                                                      <Insets left="30.0" />
+                                                   </HBox.margin>
+                                                   <children>
+                                                      <MaterialIconView glyphName="CHECK" visible="false" y="30.0" />
+                                                   </children>
+                                                </Pane>
+                                                <Label opacity="0.4" text="All done!">
+                                                   <HBox.margin>
+                                                      <Insets top="5.0" />
+                                                   </HBox.margin>
+                                                </Label>
+                                             </children>
+                                             <VBox.margin>
+                                                <Insets top="40.0" />
+                                             </VBox.margin>
+                                          </HBox>
+                                          <JFXProgressBar fx:id="importProgressbar" prefWidth="787.0" progress="0.0" VBox.vgrow="ALWAYS">
+                                             <VBox.margin>
+                                                <Insets top="120.0" />
+                                             </VBox.margin>
+                                          </JFXProgressBar>
                                        </children>
                                        <padding>
                                           <Insets bottom="20.0" left="40.0" right="20.0" top="30.0" />
@@ -455,32 +611,12 @@
                                     </VBox>
                                  </content>
                               </Tab>
-                              <Tab>
-                                <content>
-                                    <VBox prefHeight="453.0" prefWidth="768.0">
-                                       <children>
-                                          <Label minHeight="-Infinity" text="This page will transfer all selected Tables from the Database with its data to your ServiceNow instance. The Logging area and Progress bar will show additional information and inform you once the Task has finished." textAlignment="JUSTIFY" wrapText="true">
-                                             <VBox.margin>
-                                                <Insets bottom="20.0" />
-                                             </VBox.margin>
-                                          </Label>
-                                          <TextArea fx:id="importLogarea" editable="false" minHeight="-Infinity" prefHeight="160.0" prefWidth="708.0" VBox.vgrow="ALWAYS">
-                                             <VBox.margin>
-                                                <Insets bottom="15.0" />
-                                             </VBox.margin>
-                                          </TextArea>
-                                          <JFXProgressBar fx:id="importProgressbar" prefWidth="787.0" progress="0.0" VBox.vgrow="ALWAYS" />
-                                       </children>
-                                       <padding>
-                                          <Insets bottom="20.0" left="40.0" right="20.0" top="30.0" />
-                                       </padding>
-                                    </VBox>
-                                </content>
-                              </Tab>
                            </tabs>
                         </JFXTabPane>
                      </children>
                   </AnchorPane>
+
+
               </content>
             </Tab>
         </tabs>

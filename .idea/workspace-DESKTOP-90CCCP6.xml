@@ -2,21 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="94b72f2d-a2d0-4d71-90b7-cbf6db7188fd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ooRexx/JFXAlert-controller.rxj" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/SAA - Kopie (2).fxml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/SAA - Kopie (3).fxml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/SAA - Kopie.fxml" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/ServiceNow App Accelerator - Kopie (2).rxj" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/ServiceNow App Accelerator - Kopie (3).rxj" afterPath="" />
       <change type="DELETED" beforePath="$PROJECT_DIR$/archive/ServiceNow App Accelerator - Kopie.rxj" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/ooRexx/JFXTable.cls" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" afterPath="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fxml/SAA.css" afterPath="$PROJECT_DIR$/fxml/SAA.css" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fxml/SAA.fxml" afterPath="$PROJECT_DIR$/fxml/SAA.fxml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ooRexx/SAA-controller.rxj" afterPath="$PROJECT_DIR$/ooRexx/SAA-controller.rxj" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ooRexx/credentials.json" afterPath="$PROJECT_DIR$/ooRexx/credentials.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ooRexx/json-rgf.cls" afterPath="$PROJECT_DIR$/ooRexx/json-rgf.cls" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,41 +25,21 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="encrypt.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/encrypt.rxj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1472">
-              <caret line="49" column="18" lean-forward="false" selection-start-line="49" selection-start-column="18" selection-end-line="49" selection-end-column="18" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ServiceNow App Accelerator.rxj" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ServiceNow App Accelerator.rxj" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ServiceNow App Accelerator.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="113">
-              <caret line="278" column="76" lean-forward="false" selection-start-line="278" selection-start-column="76" selection-end-line="278" selection-end-column="76" />
+            <state relative-caret-position="546">
+              <caret line="443" column="13" lean-forward="false" selection-start-line="443" selection-start-column="2" selection-end-line="443" selection-end-column="13" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SAA-controller.rxj" pinned="false" current-in-tab="false">
+      <file leaf-file-name="SAA-controller.rxj" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ooRexx/SAA-controller.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1249">
-              <caret line="825" column="31" lean-forward="true" selection-start-line="825" selection-start-column="31" selection-end-line="825" selection-end-column="31" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="credentials2.json" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/credentials2.json">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="33">
-              <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+            <state relative-caret-position="368">
+              <caret line="544" column="20" lean-forward="true" selection-start-line="544" selection-start-column="20" selection-end-line="544" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -71,28 +48,28 @@
       <file leaf-file-name="test.rxj" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.rxj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2132">
-              <caret line="121" column="0" lean-forward="false" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+            <state relative-caret-position="188">
+              <caret line="4" column="36" lean-forward="false" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="JFXAlert-controller.rxj" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ooRexx/JFXAlert-controller.rxj">
+      <file leaf-file-name="credentials.json" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ooRexx/credentials.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="33">
-              <caret line="1" column="76" lean-forward="false" selection-start-line="1" selection-start-column="76" selection-end-line="1" selection-end-column="76" />
+            <state relative-caret-position="66">
+              <caret line="2" column="5" lean-forward="false" selection-start-line="2" selection-start-column="5" selection-end-line="2" selection-end-column="5" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="snowFieldLists.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/snowFieldLists.txt">
+      <file leaf-file-name="SAA.css" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fxml/SAA.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="363">
-              <caret line="11" column="37" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="65" selection-end-column="165" />
+            <state relative-caret-position="1175">
+              <caret line="231" column="0" lean-forward="false" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -104,20 +81,8 @@
             <state />
           </provider>
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="417" column="56" lean-forward="false" selection-start-line="417" selection-start-column="43" selection-end-line="417" selection-end-column="56" />
-              <folding>
-                <marker date="1506804933114" expanded="true" signature="44523:44574" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SAA.css" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fxml/SAA.css">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="7854">
-              <caret line="238" column="20" lean-forward="false" selection-start-line="238" selection-start-column="20" selection-end-line="238" selection-end-column="20" />
+            <state relative-caret-position="980">
+              <caret line="529" column="82" lean-forward="false" selection-start-line="529" selection-start-column="65" selection-end-line="529" selection-end-column="82" />
               <folding />
             </state>
           </provider>
@@ -134,36 +99,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>alert</find>
+      <find>Tab</find>
+      <find>Connect</find>
+      <find>RequiredFieldValidator</find>
+      <find>Save</find>
+      <find>validateFi</find>
+      <find>ValidationFa</find>
       <find>startImport</find>
-      <find>decry</find>
-      <find>please</find>
-      <find>please choose</find>
-      <find>unlocking</find>
-      <find>runLater</find>
-      <find>jsonObj</find>
-      <find>tickMark</find>
+      <find>validateFor</find>
+      <find>validateForm</find>
+      <find>if \validateForm(IDs) then</find>
+      <find>.glyph-icon</find>
+      <find>ValidationFacade</find>
+      <find>dbConn</find>
       <find>check</find>
-      <find>CHECK</find>
-      <find>synta&lt;x</find>
-      <find>syntax:</find>
-      <find>Table</find>
-      <find>call show</find>
+      <find>slotDir</find>
+      <find>Eventhan</find>
+      <find>self</find>
+      <find>valida</find>
+      <find>Password</find>
+      <find>databasePass</find>
+      <find>last</find>
+      <find>JFXTab</find>
+      <find>no-tab</find>
+      <find>border</find>
+      <find>dbConnect</find>
+      <find>loop while</find>
+      <find>driverma</find>
       <find>Unirest</find>
-      <find>self~log</find>
-      <find>say</find>
-      <find>.5</find>
-      <find>bit</find>
-      <find>create</find>
-      <find>getRexx</find>
-      <find>appClz</find>
-      <find>fxmlLoad</find>
-      <find>saveRexxObjToJson</find>
-      <find>getRex</find>
-      <find>promptMasterPassword</find>
-      <find>self~log(ty</find>
-      <find>type</find>
-      <find>prepare</find>
+      <find>unirest</find>
+      <find>select case</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -179,23 +144,16 @@
       <list>
         <option value="$PROJECT_DIR$/runSAA.rxj" />
         <option value="$PROJECT_DIR$/run.rxj" />
-        <option value="$PROJECT_DIR$/fxml/SAA-controller.rxj" />
-        <option value="$PROJECT_DIR$/ooRexx/tmp.js" />
-        <option value="$PROJECT_DIR$/ooRexx/credentials.json" />
         <option value="$PROJECT_DIR$/ooRexx/json-rgf.cls" />
-        <option value="$USER_HOME$/Desktop/json-rgf.cls" />
-        <option value="$USER_HOME$/Desktop/test.rxj" />
-        <option value="$PROJECT_DIR$/snowFieldList.txt" />
-        <option value="$PROJECT_DIR$/encrypt.rxj" />
-        <option value="$PROJECT_DIR$/ooRexx/JFXAlert-controller.rxj" />
-        <option value="$PROJECT_DIR$/fxml/JFXAlert.fxml" />
-        <option value="$PROJECT_DIR$/test.rxj" />
+        <option value="$PROJECT_DIR$/fxml/SAA-controller.rxj" />
+        <option value="$PROJECT_DIR$/ooRexx/credentials.json" />
+        <option value="$PROJECT_DIR$/ooRexx/tmp.js" />
+        <option value="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" />
+        <option value="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" />
         <option value="$PROJECT_DIR$/fxml/SAA.css" />
         <option value="$PROJECT_DIR$/fxml/SAA.fxml" />
-        <option value="$PROJECT_DIR$/ooRexx/credentials2.json" />
+        <option value="$PROJECT_DIR$/test.rxj" />
         <option value="$PROJECT_DIR$/ooRexx/SAA-controller.rxj" />
-        <option value="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" />
-        <option value="$PROJECT_DIR$/ServiceNow App Accelerator.rxj" />
       </list>
     </option>
   </component>
@@ -209,7 +167,7 @@
     <option name="x" value="-13" />
     <option name="y" value="-13" />
     <option name="width" value="2762" />
-    <option name="height" value="1790" />
+    <option name="height" value="1770" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -241,7 +199,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -268,30 +225,17 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ServiceNowAppAccelerator-ooRexx" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ServiceNowAppAccelerator-ooRexx" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fxml" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
       <pane id="PackagesPane" />
       <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../WU/javafx/ooRexxTryFX" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Other File Types" />
   </component>
   <component name="RunDashboard">
@@ -723,34 +667,15 @@
       <workItem from="1504604688918" duration="4716000" />
       <workItem from="1504627056790" duration="2655000" />
       <workItem from="1504688990154" duration="8187000" />
-      <workItem from="1504712780266" duration="8704000" />
-      <workItem from="1504776663843" duration="234000" />
-      <workItem from="1504777504148" duration="6141000" />
-      <workItem from="1504788212509" duration="731000" />
-      <workItem from="1504798905881" duration="5838000" />
-      <workItem from="1504805441982" duration="2122000" />
-      <workItem from="1504843825454" duration="13093000" />
-      <workItem from="1505058357779" duration="1832000" />
-      <workItem from="1505209768810" duration="57000" />
-      <workItem from="1505211588728" duration="2178000" />
-      <workItem from="1505225025428" duration="10496000" />
-      <workItem from="1505923025946" duration="6684000" />
-      <workItem from="1505984429824" duration="15502000" />
-      <workItem from="1506072977675" duration="3087000" />
-      <workItem from="1506251131377" duration="16412000" />
-      <workItem from="1506523028701" duration="1580000" />
-      <workItem from="1506703503808" duration="7438000" />
-      <workItem from="1506765731429" duration="6962000" />
-      <workItem from="1506795526213" duration="8613000" />
-      <workItem from="1506872344867" duration="10784000" />
+      <workItem from="1504712780266" duration="8764000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="260467000" />
+    <option name="totallyTimeSpent" value="140743000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-13" y="-13" width="2762" height="1790" extended-state="6" />
+    <frame x="-13" y="-13" width="2762" height="1770" extended-state="6" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -758,7 +683,7 @@
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274224" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32980973" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -766,7 +691,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1995614" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2013889" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -798,10 +723,63 @@
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/fxml/SAA-controller.rxj" />
+    <entry file="file://$PROJECT_DIR$/ooRexx/credentials.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" column="5" lean-forward="false" selection-start-line="9" selection-start-column="5" selection-end-line="9" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/json-rgf.cls">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3944">
+          <caret line="232" column="46" lean-forward="false" selection-start-line="232" selection-start-column="29" selection-end-line="232" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fxml/SAA.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2091">
+          <caret line="123" column="7" lean-forward="false" selection-start-line="123" selection-start-column="7" selection-end-line="123" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files (x86)/BSF4ooRexx/samples/JavaFX/fxml_99/json-rgf.cls" />
+    <entry file="file://$PROJECT_DIR$/fxml/SAA.fxml">
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4794">
+          <caret line="282" column="138" lean-forward="false" selection-start-line="282" selection-start-column="138" selection-end-line="282" selection-end-column="138" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../WU/javafx/ooRexxTryFX/ooRexx/TabManager.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3162">
+          <caret line="186" column="66" lean-forward="false" selection-start-line="186" selection-start-column="66" selection-end-line="186" selection-end-column="66" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.rxj" />
+    <entry file="file://$PROJECT_DIR$/ServiceNow App Accelerator.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3366">
+          <caret line="198" column="50" lean-forward="false" selection-start-line="198" selection-start-column="50" selection-end-line="198" selection-end-column="50" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fxml/SAA-controller.rxj" />
     <entry file="file://$PROJECT_DIR$/fxml/SAA.css">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2363">
           <caret line="139" column="34" lean-forward="true" selection-start-line="139" selection-start-column="34" selection-end-line="139" selection-end-column="34" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -809,6 +787,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
           <caret line="5" column="1" lean-forward="false" selection-start-line="5" selection-start-column="1" selection-end-line="5" selection-end-column="1" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -820,9 +799,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6154">
           <caret line="362" column="17" lean-forward="false" selection-start-line="362" selection-start-column="17" selection-end-line="362" selection-end-column="17" />
-          <folding>
-            <marker date="1506804933114" expanded="true" signature="44523:44574" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -838,6 +815,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1632">
           <caret line="96" column="46" lean-forward="true" selection-start-line="96" selection-start-column="46" selection-end-line="96" selection-end-column="46" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -845,6 +823,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="425">
           <caret line="25" column="19" lean-forward="true" selection-start-line="25" selection-start-column="19" selection-end-line="25" selection-end-column="19" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -855,9 +834,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="527">
           <caret line="31" column="106" lean-forward="false" selection-start-line="31" selection-start-column="106" selection-end-line="31" selection-end-column="106" />
-          <folding>
-            <marker date="1506804933114" expanded="true" signature="44523:44574" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -873,6 +850,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -881,6 +859,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -889,6 +868,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -897,6 +877,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -928,82 +909,32 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="876">
           <caret line="93" column="57" lean-forward="false" selection-start-line="93" selection-start-column="57" selection-end-line="93" selection-end-column="57" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fxml/SAA-controller.rxj" />
-    <entry file="file://$PROJECT_DIR$/ooRexx/tmp.js" />
-    <entry file="file://C:/Program Files (x86)/BSF4ooRexx/samples/JavaFX/fxml_99/json-rgf.cls" />
-    <entry file="file://$USER_HOME$/Desktop/test.rxj" />
-    <entry file="file://$USER_HOME$/Desktop/json-rgf.cls" />
-    <entry file="file://$PROJECT_DIR$/snowFieldList.txt" />
-    <entry file="file://$PROJECT_DIR$/ooRexx/credentials.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fxml/JFXAlert.fxml" />
-    <entry file="file://$USER_HOME$/Downloads/BSF4ooRexx_install_v600-20170617-beta/bsf4oorexx/BSF.CLS">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/snowFieldLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="363">
-          <caret line="11" column="37" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="65" selection-end-column="165" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ooRexx/json-rgf.cls">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1472">
-          <caret line="571" column="0" lean-forward="false" selection-start-line="571" selection-start-column="0" selection-end-line="583" selection-end-column="44" />
+        <state relative-caret-position="42">
+          <caret line="427" column="14" lean-forward="false" selection-start-line="427" selection-start-column="8" selection-end-line="427" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/tmp.js" />
+    <entry file="file://C:/Program Files (x86)/BSF4ooRexx/samples/JavaFX/fxml_99/json-rgf.cls" />
+    <entry file="file://$PROJECT_DIR$/ooRexx/credentials.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="2" column="5" lean-forward="false" selection-start-line="2" selection-start-column="5" selection-end-line="2" selection-end-column="5" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fxml/SAA.css">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7854">
-          <caret line="238" column="20" lean-forward="false" selection-start-line="238" selection-start-column="20" selection-end-line="238" selection-end-column="20" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/JFXAlert-controller.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="33">
-          <caret line="1" column="76" lean-forward="false" selection-start-line="1" selection-start-column="76" selection-end-line="1" selection-end-column="76" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/encrypt.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1472">
-          <caret line="49" column="18" lean-forward="false" selection-start-line="49" selection-start-column="18" selection-end-line="49" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2132">
-          <caret line="121" column="0" lean-forward="false" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/credentials2.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="33">
-          <caret line="1" column="0" lean-forward="true" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+        <state relative-caret-position="1175">
+          <caret line="231" column="0" lean-forward="false" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1013,26 +944,32 @@
         <state />
       </provider>
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="417" column="56" lean-forward="false" selection-start-line="417" selection-start-column="43" selection-end-line="417" selection-end-column="56" />
-          <folding>
-            <marker date="1506804933114" expanded="true" signature="44523:44574" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ooRexx/SAA-controller.rxj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1249">
-          <caret line="825" column="31" lean-forward="true" selection-start-line="825" selection-start-column="31" selection-end-line="825" selection-end-column="31" />
+        <state relative-caret-position="980">
+          <caret line="529" column="82" lean-forward="false" selection-start-line="529" selection-start-column="65" selection-end-line="529" selection-end-column="82" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ServiceNow App Accelerator.rxj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="113">
-          <caret line="278" column="76" lean-forward="false" selection-start-line="278" selection-start-column="76" selection-end-line="278" selection-end-column="76" />
+        <state relative-caret-position="546">
+          <caret line="443" column="13" lean-forward="false" selection-start-line="443" selection-start-column="2" selection-end-line="443" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="188">
+          <caret line="4" column="36" lean-forward="false" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ooRexx/SAA-controller.rxj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="368">
+          <caret line="544" column="20" lean-forward="true" selection-start-line="544" selection-start-column="20" selection-end-line="544" selection-end-column="20" />
           <folding />
         </state>
       </provider>

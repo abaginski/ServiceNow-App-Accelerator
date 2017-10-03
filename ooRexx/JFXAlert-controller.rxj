@@ -1,0 +1,15 @@
+/**
+ * Returns to the main program flow in the routine `promptMasterPassword` if the form validation succeeds
+ *
+ * @param slotDir - a directory which holds the ScriptContext and UserData
+ */
+
+::routine passwordEntered public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  /* @get(inputMasterPassword) */
+  passwordIsSet = inputMasterPassword~validate
+  if passwordIsSet then do
+    masterpassword = inputMasterPassword~getText
+    .JFXAlert~setResult(masterpassword)     /* return from ~showAndWait call with the masterpassword as result */
+  end

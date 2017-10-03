@@ -14,6 +14,7 @@ call bsf.import "com.mashape.unirest.http.async.Callback", "Callback"
 call bsf.import "com.mashape.unirest.http.Unirest", "Unirest"
 call bsf.import "javafx.application.Platform", "Platform"
 call bsf.import "java.lang.Runnable", "Runnable"
+call bsf.import "java.util.Base64", "Base64"
 
 /**
  * Fetches the E-Mail address from slotDir and writes a new Mail using the default Mail client
@@ -45,6 +46,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
  */
 ::routine testDatabaseConnection public
   use arg slotDir
+  /* validate the form fields first */
+  IDs = "databaseHost", "databaseDatabase", "databaseUsername", "databasePassword"
+  if \validateForm(IDs) then return -- leave the routine if .false returned
   scriptContext = slotDir~scriptContext
   /*@get(databaseType databaseHost databasePort databaseUsername databasePassword databaseDatabase testDatabaseConnectionButton)*/
   call setLoadingSymbolToButton testDatabaseConnectionButton
@@ -75,6 +79,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
  */
 ::routine saveDatabase public
   use arg slotDir
+  /* validate the form fields first */
+  IDs = "databaseHost", "databaseDatabase", "databaseUsername", "databasePassword"
+  if \validateForm(IDs) then return -- leave the routine if .false returned
   scriptContext = slotDir~scriptContext
   /*@get(databaseType databaseHost databasePort databaseUsername databasePassword databaseDatabase saveDatabaseButton)*/
   /* create a Rexx Object to hold all information */
@@ -86,7 +93,8 @@ call bsf.import "java.lang.Runnable", "Runnable"
   rxObj~pass = databasePassword~getText
   rxObj~dbName = databaseDatabase~getText
   call saveRexxObjToJson rxObj, "Database"
-  call setCheckGraphicToButton saveDatabaseButton
+  if result <> .false then
+    call setCheckGraphicToButton saveDatabaseButton
 
 /**
  * Saves the content of the three input controls in the `ServiceNow` tab
@@ -95,6 +103,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
  */
 ::routine saveServiceNow public
   use arg slotDir
+  /* validate the form fields first */
+  IDs = "servicenowURL", "servicenowUsername", "servicenowPassword"
+  if \validateForm(IDs) then return   -- leave the routine if .false returned
   scriptContext = slotDir~scriptContext
   /*@get(servicenowURL servicenowUsername servicenowPassword saveServiceNowButton)*/
   /* create a Rexx Object to hold all information */
@@ -103,7 +114,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
   rxObj~user = servicenowUsername~getText
   rxObj~pass = servicenowPassword~getText
   call saveRexxObjToJson rxObj, "ServiceNow"
-  call setCheckGraphicToButton saveServiceNowButton
+  /* check if there was an error while saving, caused by lack of password */
+  if result <> .false then
+    call setCheckGraphicToButton saveServiceNowButton
 
 
 /**
@@ -114,26 +127,29 @@ call bsf.import "java.lang.Runnable", "Runnable"
  */
 ::routine testServiceNow public
   use arg slotDir
+  /* validate the form fields first */
+  IDs = "servicenowURL", "servicenowUsername", "servicenowPassword"
+  if \validateForm(IDs) then return  -- leave the routine if .false returned
   /*@get(servicenowURL servicenowUsername servicenowPassword)*/
   /* build the REST request using the `Unirest` API */
   button = .my.app~SAA.fxml~testServiceNowButton
   call setLoadingSymbolToButton button
-  call SysSleep .5    -- wait 500ms for Java to update its GUI
+  call SysSleep .5    -- wait 500ms for Java to update the GUI
   url  = servicenowUrl~getText
   user = servicenowUsername~getText
   pass = servicenowPassword~getText
-  /* for testing we use a GET request on one of the fundamental tables `sys_user_group` */
-  API.URL = url || "/api/now/table/sys_user_group?sysparm_limit=1"
+  /* for testing we use a PUT request on the custom rest api with a magic table name containing { } */
+  API.URL = url || "/api/x_146620_serviceno/create_table/%7BtestApiExistence%7D"
   rexxProxy = bsfCreateRexxProxy(.TestServiceNowCallback~new,, .Callback)
-  signal on any
-  .Unirest~get(API.URL) -
+  signal on syntax
+  .Unirest~put(API.URL) -
           ~basicAuth(user, pass) -
           ~asJsonAsync(rexxProxy)
   return
-  any:
+
+  syntax:
     button~setGraphic(.nil)           -- remove the loading symbol
     raise propagate                   -- show the error message
-
 
 /**
  * A Rexx Proxy Class. Java can invoke methods in this class
@@ -183,10 +199,14 @@ call bsf.import "java.lang.Runnable", "Runnable"
   if userData~hasEntry("response") then do
     response = userData~response
     statusCode = response~getStatus
+    message = ""
     if statusCode = 200 then
       call setCheckGraphicToButton button
     else do
-      message = "Wrong credentials!" .endOfLine
+      if statusCode = 400 then
+        message ||= "You probably forgot to import the custom REST APIs. Please have a detailed look at the information in the `Home` tab." .endOfLine~copies(2)
+      else if statusCode = 401 then
+        message ||= "Wrong credentials!" .endOfLine~copies(2)
       message ||= "Status Code:" statusCode .endOfLine
       message ||= "Server Response:" response~getBody~toString
       call showPopup message
@@ -206,6 +226,33 @@ call bsf.import "java.lang.Runnable", "Runnable"
 
 
 /**
+ * Calls the "validate" method of every JFXTextField supplied in the argument
+ *
+ * @param IDs - an Array of fx:id attributes of JFXTextField controls
+ * @return <code>.false</code> if the validator finds an error, otherwise <code>.true</code>
+ */
+::routine validateForm private
+  parse upper arg IDs
+  loop ID over IDs
+    control = .my.app~SAA.fxml[ID]
+    if control~getClass~getSimpleName = "JFXComboBox" then
+      result = .ValidationFacade~validate(control)
+    else
+      result = control~validate         -- JFXTextField
+    if \result then do    -- control has an error
+      /* we need to ensure that all controls get validated before exiting this function */
+      if firstFaultyControl~isA(.string) then
+        firstFaultyControl = control
+    end
+  end
+  /* focus on firstFaultyControl if it is a JavaFX control */
+  if firstFaultyControl~isA(.bsf) then do
+    firstFaultyControl~requestFocus
+    return .false
+  end
+  return .true
+
+/**
  * Connects via JDBC to a Database
  *
  * @param type - Database type, e.g. mysql or postgresql
@@ -216,11 +263,11 @@ call bsf.import "java.lang.Runnable", "Runnable"
  * @param [port] - The Port number for this connection
  * @return <code>java.sql.Connection</code>
  */
-::routine dbConnect
+::routine dbConnect private
   use arg type, host, user, password, dbName, port
   /* Assemble the Connection String from the given information */
   url = "jdbc:" || type || "://" || host
-  if port <> "PORT" then -- if the port was not provided as argument, ooRexx will assign uppercase PORT to variable port
+  if port <> "PORT" & port <> "" then -- if the port was not provided as argument, ooRexx will assign uppercase PORT to variable port
      url ||= ":" || port
   url ||= "/" || dbName
   /* Get the JDBC-Driver */
@@ -286,6 +333,9 @@ call bsf.import "java.lang.Runnable", "Runnable"
 ::routine saveRexxObjToJson
   use strict arg rxObj, type
   jsonObj = getRexxObjFromJson()
+  /* we cannot save without a password, so leave the routine if there is no password set */
+  if .masterPassword = .nil then
+    return .false
   /* prepend our argument `rxObj` based on the type to the `jsonObj` */
   select
     when type = "Database" then
@@ -298,12 +348,14 @@ call bsf.import "java.lang.Runnable", "Runnable"
   /* convert `jsonObj` back to a string and write it to the jsonStream */
   jsonEngine = .json~new
   jsonString = jsonEngine~toJson(jsonObj)
+  encryptedJsonString = .encryptor~encrypt(jsonString)
   jsonStream = .stream~new(.jsonLocation)
   jsonStream~open("write replace")    -- open the stream with write access and replace its content when writing
-  loop line over jsonString
+  loop line over encryptedJsonString
     jsonStream~lineOut(line)
   end
   jsonStream~close                    -- release the lock on this file
+
 
 /**
  * Reads the JSON String from the hard drive and replaces the used Array with an Queue
@@ -311,23 +363,500 @@ call bsf.import "java.lang.Runnable", "Runnable"
  * @return jsonObj - A Rexx Object which holds all information from the Json file located in .jsonLocation
  */
 ::routine getRexxObjFromJson public
-/* load a fresh copy of the json file as a Rexx string */
-  jsonStream = .stream~new(.jsonLocation)
-  jsonLength = jsonStream~chars
-  jsonString = jsonStream~charIn(1, jsonLength)
-  /* convert the Rexx string with json syntax to a Rexx object */
-  jsonEngine = .json~new
-  tmpObj = jsonEngine~fromJson(jsonString)
   /* create a new jsonObj with queues instead of the generated arrays and import the existing data from tmpObj
      queues offer the "push" method, with which new items land on top of the collection */
   jsonObj = .stringTable~new
   jsonObj~Database = .queue~new
-  jsonObj~Database~appendAll(tmpObj~Database)
   jsonObj~ServiceNow = .queue~new
+  /* make sure that the master password is set or return empty jsonObj */
+  passwordIsSet = promptMasterPassword()
+  if \passwordIsSet then
+    call syntax
+  /* load a fresh copy of the json file as a Rexx string */
+  jsonStream = .stream~new(.jsonLocation)
+  jsonStream~open("read")
+  jsonLength = jsonStream~chars
+  encryptedData = jsonStream~charIn(1, jsonLength)
+  /* try decrypting the data, the app throws a Signal if the password is wrong */
+  signal on syntax    -- go to syntax: in case of exception
+  jsonString = .encryptor~decrypt(encryptedData)
+  /* convert the Rexx string with json syntax to a Rexx object */
+  jsonEngine = .json~new
+  tmpObj = jsonEngine~fromJson(jsonString)
+  jsonObj~Database~appendAll(tmpObj~Database)
   jsonObj~ServiceNow~appendAll(tmpObj~ServiceNow)
-  jsonStream~close
-  return jsonObj
+  syntax:
+    jsonStream~close
+    return jsonObj
+
+/**
+ * Displays a text input dialog if the master password is empty
+ *
+ * @return <code>.true</code> if password is set
+ */
+::routine promptMasterPassword
+  if .masterPassword = .nil then do
+    JFXAlert = .bsf~new("com.jfoenix.controls.JFXAlert", .stage)
+    .environment~JFXAlert = JFXAlert      -- make it accessible for JFXAlert-controller.rxj
+    alertFXMLUrl = .appClzLdr~findResource("fxml/JFXAlert.fxml")
+    alertFXML    = .FXMLLoader~load(alertFXMLUrl)   -- load the fxml document
+    JFXAlert~setContent(bsf.createJavaArrayOf("javafx.scene.Node", alertFXML))    -- setContent is expecting a java array of type Node
+    okButtonType = .bsf~new("javafx.scene.control.ButtonType", "OK", bsf.import("javafx.scene.control.ButtonBar$ButtonData")~OK_DONE)
+    JFXAlert~getDialogPane~getButtonTypes~add(okButtonType)
+    /* usually, if one clicks anywhere in a JFXAlert, it closes.
+    Disable that because we want to encourage the user to use a password */
+    JFXAlert~setOverlayClose(.false)
+    /* show the alert and wait for its answer */
+    Optional = JFXAlert~showAndWait
+    /* if the user clicks on ESC, Optional~get holds the invisible "Close" Button, return .false in that case */
+    if \Optional~get~isA(.string) then
+      return .false
+    /* save the master password in the environment */
+    .environment~masterPassword = Optional~get
+    /* feed the password based key derivation function */
+    .encryptor~setPassword(.masterPassword)
+  end
+  return .true      -- password was set before
+
+
+/**
+ * Initialises an object of the .importTask class with the database and servicenow credentials
+ * Shows the Pane with the fx:id "databaseAfterConnect" including its content
+ * Displays a list of tables in the database in form of checkboxes
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine prepareImport public
+  use arg slotDir
+  signal on syntax
+  scriptContext = slotDir~scriptContext
+  /* validate the form fields first */
+  IDs = "importDatabase", "importServiceNow"    -- create an array with those two items
+  if \validateForm(IDs) then return -- leave the routine if .false has returned
+  /* @get(importDatabase importServiceNow databaseAfterConnect databaseCheckboxPane) */
+  /* fetch the indices of the selected ComboBox items and supply them to the .ImportTask class */
+  databaseIndex = importDatabase~getSelectionModel~getSelectedIndex
+  servicenowIndex = importServiceNow~getSelectionModel~getSelectedIndex
+  if .my.app~hasEntry("importTask") then do
+      -- todo: cancel the last task, start new
+  end
+  .my.app~importTask = .ImportTask~new(databaseIndex, servicenowIndex)
+  /* call a method to load tables from the database */
+  tableNames = .my.app~importTask~extractTables
+  checkboxes = databaseCheckboxPane~getChildren
+  /* first checkbox should always be "Select all" - delete the rest if available */
+  items = checkboxes~size
+  if items > 1 then
+    checkboxes~remove(1, items)   -- (from,to) 0 based indices
+  /* now append each table name as a checkbox */
+  loop tableName over tableNames
+    checkbox = .bsf~new("com.jfoenix.controls.JFXCheckBox", tableName)
+    checkboxes~add(checkbox)
+  end
+  databaseAfterConnect~visible = .true
+  return
+  syntax:
+    call showPopup "Connection failed!"
+
+/**
+ * Propagates the selected property of the "Select all" checkbox to all other checkboxes in the `databaseCheckboxPane`
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine selectAllCheckboxes public
+  use arg slotDir
+  checkboxes = slotDir~scriptContext~getAttribute("databaseCheckboxPane")~getChildren
+  selectAllCheckbox = slotDir~scriptContext~getAttribute("event")~target
+  loop checkbox over checkboxes
+    checkbox~selected = selectAllCheckbox~isSelected
+  end
+
+
+/**
+ * Saves the database table choice in the .ImportTask class and starts the import job as a Task
+ *
+ * @param slotDir - BSF4ooRexx supplies the SlotDir argument at the Java side
+ */
+::routine startImport public
+  use arg slotDir
+  scriptContext = slotDir~scriptContext
+  /* @get(importTabPane databaseCheckboxPane) */
+  checkboxes = databaseCheckboxPane~getChildren
+  numOfTables = checkboxes~size - 1
+  if numOfTables = 0 then do
+    call showPopup "No tables selected"
+    return
+  end
+  loop i = 1 to numOfTables     -- prevent IndexOutOfBound Exception
+    checkbox = checkboxes~get(i)
+    if checkbox~isSelected then do
+      tableName = checkBox~getText
+      .my.app~importTask~addTable(tableName)
+    end
+  end
+  /* switch the view to the Log Area and the Progress Bar to accompany the user with more information */
+  importTabPane~getSelectionModel~selectNext
+  call SysSleep .5    -- wait for 500 ms for Java to update the GUI
+  /* execute the import task process in its own Thread to not block the GUI */
+  .environment~jTask = bsfCreateRexxProxy(.my.app~importTask,,"javafx.concurrent.Task")
+  .Executor~execute(.jTask)
+
+
+
+/**
+ * The main heart of the application: does the extracting and uploading job in a seperate thread
+ */
+::class ImportTask
+/**
+ * This constructor method saves the database and servicenow credentials in the class
+ *
+ * @param databaseIndex - The 0 based index of the selected database connection
+ * @param databaseIndex - The 0 based index of the selected servicenow instance
+ */
+::method init
+  expose databaseCredentials serviceNowCredentials serviceNowURL databaseTables importProgressbar jsonEngine step steps
+  use strict arg databaseIndex, servicenowIndex
+  jsonEngine = .json~new
+  importProgressbar = .my.app~SAA.fxml~importProgressbar
+  -- importProgressbar~setProgress(-1.0)     -- indeterminate progress
+  /* create an array which holds all fx:ids of panes to get a hook for GUI manipulation in the `unlockNextStep` method */
+  steps = .array~of("readingDatabasePane", "creatingTablesPane", "uploadingDataPane", "allDonePane")
+  step = 1
+  databaseTables = .array~new
+  databaseIndex   += 1
+  servicenowIndex += 1
+  jsonObj = getRexxObjFromJson()
+  databaseCredentials = jsonObj~Database[databaseIndex]         -- only extract information about this Database connection
+  serviceNowCredentials = jsonObj~ServiceNow[servicenowIndex]   -- only extract information about this ServiceNow instance
+  serviceNowURL = serviceNowCredentials~url
+  basicAuth = self~getBasicAuth(serviceNowCredentials)
+  .Unirest~setDefaultHeader("Authorization", basicAuth)
+  /* remove both timeouts for connection and socket (default values are 10s and 1m) */
+  .Unirest~setTimeouts(0,0)
+  self~connectToDatabase(databaseIndex)
+
+/**
+ * Base64 encodes a string with the username and password of the ServiceNow instance for the REST API calls
+ *
+ * @param credentials - a .stringTable with the entries "user" and "pass"
+ */
+::method getBasicAuth private
+  use arg credentials
+  user = credentials~user
+  pass = credentials~pass
+  authString = user":"pass
+  jString = .java.lang.String~new(authString) -- also box("ST", authString)       -- create a java.lang.String
+  byteArray = jString~getBytes
+  basicAuth = "Basic" .Base64~getEncoder~encodeToString(byteArray)
+  return basicAuth
+
+/**
+ * Calls the `dbConnect` function in its own thread
+ *
+ * @param databaseIndex - the 1-based index of the database to connect to
+ */
+::method connectToDatabase
+  expose databaseCredentials databaseConnection databaseStatement
+  use arg databaseIndex
+  d = databaseCredentials
+  databaseConnection = dbConnect(d~type, d~host, d~user, d~pass, d~dbName, d~port)
+  databaseStatement = databaseConnection~createStatement
+
+/**
+ * Iterates over all selected tables, extracts meta information and calls the REST API to create new tables
+ * Runs in a separate thread
+ */
+::method call
+  expose databaseTables
+  signal on syntax
+  totalApiCalls = self~calculateTotalApiCalls
+  tableNum = databaseTables~items
+  dataNum = totalApiCalls - tableNum      -- one api call per table creation + data insertion
+  s = (tableNum <> 1)~?("s", "")
+  self~log(dataNum "records found in" tableNum "table" || s)
+  serviceNowTables = .array~new
+  /* show loading symbol at "creating tables" pane */
+  self~unlockNextStep
+  loop tableName over databaseTables
+    /* gather information for the REST API call */
+    serviceNowTable = self~createServiceNowTable(tableName)
+    if serviceNowTable <> .nil then do
+      /* both the database table name and the servicenow table name are needed, so save them in an array */
+      tableNames = .array~of(tableName, serviceNowTable)
+      serviceNowTables~append(tableNames)
+    end
+  end
+  /* show loading symbol at "uploading data" pane */
+  self~unlockNextStep
+  /* all tables are created, now insert data */
+  loop tableNames over serviceNowTables
+    dbTable = tableNames[1]
+    serviceNowTable = tableNames[2]
+    self~uploadData(dbTable, serviceNowTable)
+  end
+  return
+  syntax:
+    say ppCondition2(condition("object"))
+    raise propagate
+
+/**
+ * Replaces the loading symbol in the current pane with a tick mark
+ * Displays the loading symbol in the next pane
+ * Increases the font pacity to 100 percent in the label of the next pane
+ */
+::method unlockNextStep
+  expose steps step
+  signal on syntax
+  idOfPane = steps~at(step)~upper
+  currentPane = .my.app~SAA.fxml[idOfPane]
+  checkSymbol = .bsf~new("de.jensd.fx.glyphs.materialicons.MaterialIconView", .MaterialIcon~CHECK) ~~setY(30)
+  paneItems = currentPane~getChildren
+  .FxGUIThread~runLater(paneItems, "remove", "I", 0)
+  .FxGUIThread~runLater(paneItems, "add", "I", checkSymbol)
+  step += 1
+  idOfPane = steps~at(step)~upper
+  if idOfPane <> .nil then do
+    nextPane = .my.app~SAA.fxml[idOfPane]
+    loadingSymbol = nextPane~getChildren~get(0)
+    .FxGUIThread~runLater(loadingSymbol, "setVisible", "I", .true)
+    stepDescriptionLabel = nextPane~getParent~getChildren~get(1)
+    .FxGUIThread~runLater(stepDescriptionLabel, "setOpacity", "I", 1.0)
+  end
+  return
+
+  syntax:
+    say ppCondition2(condition("object"))
+    raise propagate
+
+/**
+ * Calculates the number of all API calls that will be made
+ *
+ * @return totalApiCalls - The number of all tables and its rows
+ */
+::method calculateTotalApiCalls
+  expose databaseTables databaseStatement totalApiCalls currentProgress lastProgressBarUpdateAt
+  currentProgress = 0
+  lastProgressBarUpdateAt = 0
+  totalApiCalls = databaseTables~items    -- one api call for each table
+  jInt1 = box("I", 1)                     -- convert the Rexx String "1" to a java.lang.Integer 1
+  loop tableName over databaseTables
+    sql = "SELECT COUNT(1) FROM" tableName
+    resultSet = databaseStatement~executeQuery(sql)
+    resultSet~next
+    rowCount = resultSet~getInt(jInt1)
+    totalApiCalls += rowCount             -- one api call for each row
+  end
+  return totalApiCalls
+
+/**
+ * Extracts the table names with the help of meta data
+ *
+ * @return tableNames - an array of table names in the database
+ */
+::method extractTables
+  expose databaseConnection tableNames
+  metaData = databaseConnection~getMetaData
+  resultSet = metaData~getTables(.nil, .nil, "%", .nil)
+  tableNames = .array~new
+  loop while resultSet~next
+    tableName = resultSet~getString("TABLE_NAME")
+    tableNames~append(tableName)
+  end
+  return tableNames
+
+/**
+ * Adds a table name to the databaseTable collection
+ *
+ * @param tableName - The name of a Database table
+ */
+::method addTable
+  expose databaseTables
+  use arg tableName
+  databaseTables~append(tableName)
+
+/**
+ * Writes the provided message to the output stream
+ *
+ * @param message - the message without a line break in the beginning/at the end
+ */
+::method log
+  use arg message
+  say message
+
+/**
+ * Forwards the message to the `log` method and invokes `progress`
+ *
+ * @param message - The message that is to be logged
+ */
+::method logAndProgress
+  use arg message
+  self~~log(message)  -
+      ~~progress
+
+/**
+ * Progresses by one API call and calculates the new progress
+ * Unlocks the last step if task has finished
+ */
+::method progress
+  expose totalApiCalls currentProgress importProgressbar lastProgressBarUpdateAt
+  currentProgress += 1
+  progressTo = currentProgress / totalApiCalls
+  increment = (progressTo - lastProgressBarUpdateAt) * 100
+  finished = progressTo = 1
+  if increment >= 1 | finished then do
+    .FxGUIThread~runLater(importProgressbar, "setProgress", "I", progressTo)
+    lastProgressBarUpdateAt = progressTo
+    if finished then
+      self~unlockNextStep   -- unlock last step, show "All done!" message
+  end
+
+/**
+ * Extracts all relevant information about the given table using JDBC meta data
+ *
+ * @param  tableName - the name of a table
+ * @return fieldList - a .stringTable with the naming convention based on a ServiceNow `fieldList`
+ */
+::method getTableSchema
+  expose databaseConnection
+  use arg tableName
+  fieldList = .array~new
+  metaData = databaseConnection~getMetaData
+  resultSet = metaData~getColumns(.nil, .nil, tableName, .nil)
+  do while resultSet~next
+    columnInfo = self~getColumnSchema(resultSet)
+    fieldList~append(columnInfo)
+  end
+  return fieldList
+
+::method getColumnSchema
+  use arg resultSet
+  columnInfo = .stringTable~new
+  columnInfo~label = resultSet~getString("COLUMN_NAME")
+  nullable = resultSet~getString("IS_NULLABLE")
+  columnInfo~mandatory = (nullable = "NO")~?(.true, .false) -- if the field is not nullable, it is mandatory
+  columnInfo~comments = resultSet~getString("REMARKS")
+  columnType = resultSet~getString("TYPE_NAME")
+  select case columnType
+    when "TINYINT", "SMALLINT", "MEDIUMINT", "INT" then
+      type = "Integer"
+    when "BIGINT" then
+      type = "Long"
+    when "DECIMAL", "FLOAT", "REAL", "DOUBLE" then
+      type = "Decimal"
+    when "BIT", "BOOLEAN" then
+      type = "Boolean"
+    when "DATE" then
+      type = "Date"
+    when "TIME" then
+      type = "Time"
+    when "DATETIME", "TIMESTAMP" then
+      type = "DateTime"
+    otherwise
+      type = "String"
+  end
+  columnInfo~type = type
+  columnInfo~primary = .false
+  return columnInfo
+
+/**
+ * Converts the database table and uploads its structure to ServiceNow
+ *
+ * @param tableName - the name of the database table
+ * @return serviceNowTable - the adjusted name of the created ServiceNow table
+ */
+::method createServiceNowTable
+  expose serviceNowURL jsonEngine
+  use arg tableName
+  signal on syntax
+  tableSchema = self~getTableSchema(tableName)
+  /* convert to json without unnecessary line breaks and white spaces */
+  jsonString = jsonEngine~toMinifiedJson(tableSchema)
+  body = .bsf~new("com.mashape.unirest.http.JsonNode", jsonString)
+  API.URL = serviceNowURL || "/api/x_146620_serviceno/create_table/" || tableName
+  httpResponse = .Unirest~put(API.URL) -
+                         ~header("Content-type", "application/json") -
+                         ~body(body) -
+                         ~asJson         -- synchronous call for table creation
+  /* convert HttpResponse to a json encoded string, create a Rexx object, extract information */
+  jsonResponse = httpResponse~getBody~toString
+  statusCode = httpResponse~getStatus
+  resultObj = jsonEngine~fromJson(jsonResponse)
+  /* no appropriate content returned so output the json response as error message */
+  if statusCode <> 290 then do        -- custom status code
+    message = "[Error]" jsonResponse
+    return .nil
+  end
+  else do
+    serviceNowTable = resultObj["result"]["Name"]
+    columnCount = resultObj["result"]["Columns"]
+    message = "Table" pp(tableName) "created as" pp(serviceNowTable) "with" columnCount "columns"
+  end
+  self~log(message)
+  self~progress
+  return serviceNowTable
+
+  syntax:
+    say ppCondition2(condition("object"))
+    raise propagate
+
+/**
+ * Iterates over all rows of the database table, extracting all the data and sending it to the ServiceNow instance
+ *
+ * @param tableName - the name of the database table
+ * @param serviceNowTable - the name of the corresponding ServiceNow table (came with REST API table creation response)
+ */
+::method uploadData
+  expose serviceNowURL jsonEngine databaseStatement
+  use arg tableName, serviceNowTable
+  signal on syntax
+  rexxProxy = bsfCreateRexxProxy(.DataInsertionCallback~new,, .Callback)
+  API.URL = serviceNowURL || "/api/now/table/" || serviceNowTable
+  /* get table schema for column name */
+  columns = self~getTableSchema(tableName)
+  /* extract data from this table */
+  sql = "SELECT * FROM" tableName
+  resultSet = databaseStatement~executeQuery(sql)
+  do while resultSet~next
+    rxObj = .stringTable~new
+    loop column over columns
+      rxObj[column~label~lower] = resultSet~getString(column~label)   -- save the value of the database cell in rxObj
+    end
+    jsonString = jsonEngine~toMinifiedJson(rxObj)
+    body = .bsf~new("com.mashape.unirest.http.JsonNode", jsonString)
+    if \.jTask~isCancelled then
+      .Unirest~post(API.URL) -
+              ~header("Content-type", "application/json") -
+              ~body(body) -
+              ~asJsonAsync(rexxProxy)
+  end
+  return
+  syntax:
+    say ppCondition2(condition("object"))
+    raise propagate
+
+
+
+::class DataInsertionCallback
+/**
+ * The REST API call was successful and returns a response
+ * Examines the status code and displays the result to the user
+ *
+ * @param response - <code>com.mashape.unirest.http.HttpResponse</code>
+ */
+::method completed
+  use arg response
+  .my.app~importTask~progress
+
+
+::method failed
+  use arg exception
+  message = exception~getMessage
+  suppressed = exception~getSuppressed
+  cause = exception~getCause
+  .my.app~importTask~log("Upload failed")
+  .my.app~importTask~logAndProgress("Message:" message suppressed cause)
 
 
 ::requires "BSF.CLS"
 ::requires "ooRexx/json-rgf.cls"      -- get JSON Support
+::requires "rgf_util2.rex"  -- holds the routine ppCondition2 for error printing

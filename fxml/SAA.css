@@ -26,17 +26,18 @@
     -fx-opacity: 0;
 }
 
-
-.root > .tab-pane > .tab-header-area {
-    -fx-padding: 22 0 0 6;
+.tabGraphic {
+    -glyph-size:20px;
 }
 
 .root > .tab-pane > .tab-header-area {
     -fx-font-family: "Palanquin Dark";
     -fx-cursor: hand;
+    -fx-font-size:16px;
     -fx-background-color:#181621;
     -fx-border-width:0 0 9 0;
     -fx-border-color:#214778;
+    -fx-padding: 22 0 0 6;
 }
 
 .tab-content-area {
@@ -48,17 +49,11 @@
     -fx-tab-min-width:20px;
     -fx-tab-min-height:70px;
 }
-
 .tab {
     -fx-focus-color: transparent;
     -fx-focus-faint-color: transparent;
     -fx-background-color:transparent;
-    /*-fx-background-insets: 0, 0 5 0 0, 1 6 0 0 ;*/
-    /*-fx-padding: 4 10 4 4 ;*/
-    /*-fx-background-insets: 1 6, 0 5 0 0, 1;*/
 }
-
-
 
 .tab:selected {
     -fx-background-color: #214778;
@@ -69,8 +64,6 @@
 .root > .tab-pane > .tab:hover > .tab-label {
     -fx-text-fill:white;
 }
-
-
 
 .tab .tab-label { 
     -fx-alignment: CENTER;
@@ -104,6 +97,12 @@
     -fx-background-color:transparent;
 }
 
+.validation-facade {
+ /*   -fx-border-color: #113666;
+    -fx-border-width: 2;
+    -fx-border-radius: 5;
+*/
+}
 
 .button {
     -fx-padding: 5 22;
@@ -228,7 +227,14 @@
 
 .no-tab-header {
     -fx-tab-max-height: 0 ;
-} 
+}
+
 .no-tab-header .tab-header-area {
     visibility: hidden ;
+}
+
+.importProgressStep .glyph-icon {
+    -fx-fill: #289637;
+    -fx-effect: dropshadow(one-pass-box, rgba(0,0,0,0.8), 4, 0.0, 1, 1);
+    -glyph-size: 30;
 }

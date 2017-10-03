@@ -113,7 +113,7 @@ end
 
 ::attribute version get class
   use strict arg           -- no argument allowed!
-  return "100.20160804"    -- version in the form: major*100+minor || "." || yyyymmdd
+  return "100.20170908"    -- version in the form: major*100+minor || "." || yyyymmdd
 
 /** Determines the encoding by inspecting the first four bytes of a JSON string, cf.
 *   cf. <https://www.ietf.org/rfc/rfc4627.txt>
@@ -269,11 +269,13 @@ end
     strIndent1=indent~copies(level)       -- create outer indentation string once
     strIndent2=indent~copies(level+1)     -- create inner indentation string once
 
+    buffer~append('[')
+    /*
     if .json.useRexxV5 then
        buffer~append(strIndent1, '[')
     else
        buffer~~append(strIndent1) ~append('[')
-
+    */
     sup=rexxObject~supplier
     level+=1                  -- increase level
 
@@ -295,11 +297,13 @@ end
     end
     level-=1                  -- decrease level
 
+     buffer~append(']')
+   /*
     if .json.useRexxV5 then
        buffer~append(strIndent1, ']', .endOfLine)
     else
-       buffer~~append(strIndent1) ~~append(']') ~append(.endOfLine)
-
+       buffer~~append(strIndent1) ~~append(']')-- ~append(.endOfLine)
+    */
 
 
 /** Encodes any ooRexx unordered collection, including directory objects.
@@ -369,9 +373,9 @@ end
     level-=1                     -- decrease level
 
     if .json.useRexxV5 then
-       buffer~append(strIndent1, '}', .endOfLine)
+       buffer~append(strIndent1, '}') --, .endOfLine)
     else
-       buffer ~~append(strIndent1) ~~append('}') ~append(.endOfLine)
+       buffer ~~append(strIndent1) ~~append('}') --~append(.endOfLine)
 
 
 /** Encodes a Rexx string, applying the JSON character escaping strings.
@@ -565,19 +569,19 @@ parseError: raise propagate
 
     rexxArray = .array~new
 
-      /* remove all leading whitespaces */
-      loop forever
-        parse value jsonString with =(jsonPos) char +1
+    /* remove all leading whitespaces */
+    loop forever
+      parse value jsonString with =(jsonPos) char +1
+      if char <> " " then leave
+      jsonPos += 1
+    end
+
+
+    if char == ']' then do
         jsonPos += 1
-        if char <> " " then leave
-      end
-
-      if char == ']' then do
-          jsonPos += 1
-          return rexxArray
-      end
-      else self~parseJSONarrayValue(rexxArray)
-
+        return rexxArray
+    end
+    else self~parseJSONarrayValue(rexxArray)
 
     do forever
         self~trimLeadingWhitespace
@@ -711,6 +715,53 @@ parseError: raise propagate
         else leave
     end
 
+
+/**
+ * Removes all blank characters and line breaks to achieve a smaller String size
+ *
+ * @author Adrian Baginski
+ * @since 100.20170908
+ * @param jsonString - A JSON Encoded String
+ * @return jsonString - The minified version of the JSON String
+ */
+::method minify
+  use arg jsonString
+  currentPos = 1
+  skipDeletingStr = .false
+  do while currentPos <= jsonString~length
+    /* blank chars are only allowed when quoted in "" */
+    if jsonString~contains('"', currentPos, 1) then do
+      /* invert the skipDeletingStr boolean if the previous char was not an escaping character */
+      if \jsonString~contains("\", currentPos - 1, 1) then
+        skipDeletingStr = \skipDeletingStr
+    end
+    else do
+      /* remove all blank chars */
+      isBlank = jsonString~contains(" ", currentPos, 1) | jsonString~contains("0A"x, currentPos, 2)
+      if isBlank then do
+        if \skipDeletingStr then do
+          jsonString = jsonString~delStr(currentPos, 1)
+          currentPos -= 1
+        end
+      end
+    end
+    currentPos += 1
+  end
+  return jsonString
+
+
+/**
+ * Forwards the provided Rexx Object to be converted to a JSON String
+ * Calls the method `minify` to remove all unnecessary line breaks and white spaces
+ *
+ * @param rxObj - the object to be converted
+ * @return minified - a minified JSON encoded string representing the parameter
+ */
+::method toMinifiedJson
+  use arg rxObj
+  jsonString = self~toJson(rxObj)
+  minified   = self~minify(jsonString)
+  return minified
 
 
 /* ========================================================================= */

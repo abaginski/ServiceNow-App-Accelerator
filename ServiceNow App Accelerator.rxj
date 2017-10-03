@@ -34,15 +34,19 @@ javaFolder   = appDirectory || "java" || .file~separator
 call addJarsFromDirToClasspath javaFolder
 /* exit this program if the return value of the latest routine call returned "true" */
 if result = .true then exit
+say time() "loading resources"
+
+/* apply a hot fix provided by BSF.CLS */
+call BsfApplyHotFixCrash .true
 
 /* static class imports */
 call bsf.import "javafx.beans.value.ChangeListener", "ChangeListener"
-call bsf.import "javafx.fxml.FXMLLoader", "FXMLLoader"
 call bsf.import "javafx.scene.text.Font", "Font"
 call bsf.import "javafx.util.Callback", "fxCallback"
 call bsf.import "javafx.collections.FXCollections", "FXCollections"
 call bsf.import "javafx.beans.property.SimpleStringProperty",  "SimpleStringProperty"
 call bsf.import "javafx.beans.property.SimpleIntegerProperty", "SimpleIntegerProperty"
+call bsf.import "java.util.concurrent.Executors", "Executors"
 
 /* adding the controller file as a package to the context allows to use its public routines
    ::REQUIRES will not work here because the file would be loaded before calling `addJarsFromDirToClasspath`
@@ -53,10 +57,16 @@ package = .package~new("ooRexx/SAA-controller.rxj")
 /* prepare the URL class loader for the root directory of this application */
 jfile = .bsf~new("java.io.File", appDirectory)
 urlAppDir = jfile~toUri~toUrl
-.local~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
+.environment~appClzLdr = .bsf~new("java.net.URLClassLoader", bsf.createJavaArrayOf("java.net.URL", urlAppDir))
 
 /* setup environment variables */
 .environment~jsonLocation = "ooRexx/credentials.json"
+.environment~FXMLLoader = bsf.import("javafx.fxml.FXMLLoader")
+.environment~ValidationFacade = bsf.import("com.jfoenix.validation.ValidationFacade")
+.environment~Executor = .Executors~newSingleThreadExecutor    -- create a new executor for concurrency operations
+.environment~encryptor = .bsf~new("org.jasypt.encryption.pbe.StandardPBEStringEncryptor")
+.encryptor~setAlgorithm("PBEWithSHA1AndDESede")   -- use triple DES algorithm for encryption and decryption operations
+.environment~masterPassword = .nil
 
 /* load fonts
    one could also use @font-face in css to load fonts, but as of 2017-08-24 there is a bug in JavaFX 8 if the
@@ -67,7 +77,7 @@ urlAppDir = jfile~toUri~toUrl
 
 /* launch the JavaFX Application Thread */
 .environment~Application = bsfCreateRexxProxy(.RxApplication~new,,"javafx.application.Application")
-.Application~launch(.Application~getClass,.nil)           -- invoke the "start" Method of .RxDocHandler
+.Application~launch(.Application~getClass,.nil)           -- invoke the "start" Method of .RxApplication
 exit 0
 
 syntax:
@@ -87,45 +97,54 @@ syntax:
 ::class RxApplication
 ::method start    -- will be invoked by the "launch" method
   use arg stage   -- we get the primary stage to use for our UI
+  .environment~stage = stage
   stage~title = "ServiceNow App Accelerator"
+  .Platform~setImplicitExit(.false)
+  /* if the user closes the stage, call the "handle" method of this class by the EventHandler interface */
+  rexxEventHandler = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
+  stage~setOnCloseRequest(rexxEventHandler)
+  /* load and attach FXML file */
   sceneFXMLUrl = .appClzLdr~findResource("fxml/SAA.fxml")
   sceneFXML    = .FXMLLoader~load(sceneFXMLUrl)   -- load the fxml document
-  /* import all static classes in the controller file */
+  say time() "starting app"
   /* create a scene from the FXML DOM and assign it to the stage */
   scene = .bsf~new("javafx.scene.Scene", sceneFXML) -- create a scene for our document
   self~setUpDefaultValues
   self~setUpListeners
+  self~setUpValidators
   /* create a new instance of the JFXTableManager Class in scope "local"
      to make it accessible from anywhere in this file */
   .local~TableManager = .JFXTableManager~new
   /* show the GUI */
   stage~~setScene(scene) -
        ~~show
-
-  TabPane = .my.app~SAA.fxml~mainTabPane
-  SelectionModel = TabPane~getSelectionModel
-  SelectionModel~~selectNext~~selectNext
+  say time() "app ready"
 
 /**
- * "Stop" is called automatically by the FX event loop when shutting down the GUI
+ * Shuts down all event loops and exits the platform
  */
-::method stop
+::method handle
   /* Unirest starts a background event loop until you manually shutdown all the threads by invoking `shutdown` */
   .Unirest~shutdown
+  /* the same applies to the ExecutorService */
+  .Executor~shutdown
+  /* shutdown the Application */
+  .Platform~exit
+  say time() "shutting down"
 
 /**
  * Points each combo box to the first value as this is not possible in FXML
  */
-::method setUpDefaultValues
+::method setUpDefaultValues private
   comboBoxes = .my.app~SAA.fxml~databaseType, .my.app~SAA.fxml~manageCombobox
   loop comboBox over comboBoxes
-    comboBox~getSelectionModel~select(0)      -- autoselect the first 0-based value
+    comboBox~getSelectionModel~select(0)
   end
 
 /**
  * Sets change listener to various controls of the FXML file
  */
-::method setUpListeners
+::method setUpListeners private
   /* add a change listener to the "manage" combobox */
   rexxProxy = bsfCreateRexxProxy(.manageComboboxChangeListener~new,,.ChangeListener)
   .my.app~SAA.fxml~manageCombobox~valueProperty~addListener(rexxProxy)
@@ -140,12 +159,48 @@ syntax:
   mainTabPane = .my.app~SAA.fxml~mainTabPane
   mainTabPane~getSelectionModel~selectedItemProperty~addListener(rexxProxy)
 
+/**
+ * Creates change listeners on the "focused" property of some predefined mandatory textfields
+ */
+::method setUpValidators private
+  IDs = "databaseHost", "databaseDatabase", "databaseUsername", -
+        "servicenowURL", "servicenowUsername", "servicenowPassword", -
+        "importDatabase", "importServiceNow"
+  loop ID over IDs
+    rexxProxy = bsfCreateRexxProxy(.formValidator~new,,.ChangeListener)
+    control = .my.app~SAA.fxml[ID~upper]
+    control~focusedProperty~addListener(rexxProxy)
+  end
+
+
+
+/**
+ * An implementation of the ChangeListener interface.
+ */
+::class formValidator private
+/**
+ * Valides the control when it looses focus
+ *
+ * @param observable - <code>javafx.beans.value.ObservableValue</code>
+ * @param oldValue   - The value of the control before the change
+ * @param newValue   - The current value after it has changed
+ */
+::method changed
+  use arg observable, oldValue, newValue
+  if \newValue then do
+    control = observable~getBean
+    if control~getClass~getSimpleName = "JFXComboBox" then
+      .ValidationFacade~validate(control)       -- JFXComboBox
+    else
+      control~validate                          -- JFXTextField
+  end
+
 
 
 /**
  * A change listener class for the control `manageCombobox` in the `Manage` Tab
  */
-::class manageComboboxChangeListener
+::class manageComboboxChangeListener private
 /**
  * This method gets invoked when the value of the `manageCombobox` has changed
  * It clears the values of the the right table depending on the selection and fills it with fresh data
@@ -163,7 +218,7 @@ syntax:
 /**
  * A change listener class for the JFXTabPane `configurationTabPane`
  */
-::class configurationTabPaneChangeListener
+::class configurationTabPaneChangeListener private
 /**
  * This class will reload the displayed Table when the user selects the "Manage" Tab
  *
@@ -183,7 +238,7 @@ syntax:
 /**
  * A change listener class for the main Tab Pane
  */
-::class mainTabPaneChangeListener
+::class mainTabPaneChangeListener private
 /**
  * Refresh the items of both ComboBoxes on the "Import data" Tab when the user visits it
  *
@@ -204,19 +259,27 @@ syntax:
     jsonObj = getRexxObjFromJson()
     /* set items for databaseCombobox */
     items = .FXCollections~observableArrayList
-    loop data over jsonObj~Database
-      text = data~type || ":" || data~host || "/" || data~dbName
-      items~add(text)
-    end
+    if jsonObj~hasEntry("Database") then
+      loop data over jsonObj~Database
+        text = data~type || ":" || data~host || "/" || data~dbName
+        items~add(text)
+      end
     databaseCombobox~getItems~addAll(items)
     /* set items for databaseCombobox */
     items = .FXCollections~observableArrayList
-    loop data over jsonObj~ServiceNow
-      items~add(data~url)
-    end
+    if jsonObj~hasEntry("ServiceNow") then
+      loop data over jsonObj~ServiceNow
+        items~add(data~url)
+      end
     servicenowCombobox~getItems~addAll(items)
   end
-
+  else if oldValue~getText = "Import data" & .my.app~hasEntry("importTask") then do
+    /* if the user switches from last tab to another tab and has started to prepare the import task, abort it */
+    if .environment~hasEntry("jTask") then
+      .jTask~cancel(.true)              -- interrupt the Thread if necessary
+    /* show the first screen for the user to select a database and servicenow instance */
+    .my.app~SAA.fxml~importTabPane~getSelectionModel~selectFirst
+  end
 
 
 /**
@@ -530,6 +593,7 @@ syntax:
   classpath = value("CLASSPATH",,"ENVIRONMENT")
   /* look for our jar files in the classpath */
   if classpath~pos(pathExtension) = 0 then do
+    say time() "updating environment"
     newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
     call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
     /* run the Application again making use of the new classpath */

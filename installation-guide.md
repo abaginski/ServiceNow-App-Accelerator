@@ -1,0 +1,1 @@
+# ServiceNow App Accelerator starting guide
