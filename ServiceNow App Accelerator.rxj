@@ -37,7 +37,9 @@ if result = .true then exit
 say time() "loading resources"
 
 /* apply a hot fix provided by BSF.CLS */
-call BsfApplyHotFixCrash .true
+say .routines~hasEntry("BsfApplyHotFixCrash")
+if .routines~hasEntry("BsfApplyHotFixCrash") then
+	call BsfApplyHotFixCrash .true
 
 /* static class imports */
 call bsf.import "javafx.beans.value.ChangeListener", "ChangeListener"
