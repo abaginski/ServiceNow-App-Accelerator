@@ -22,7 +22,7 @@
  *-----------------------------------------------------------------------------
  */
 
-/* in case an error occurres, jump to `Syntax:` expression for custom error handling */
+/* in case an error occurres, jump to `Syntax:` label for custom error handling */
 signal on syntax
 
 /* parse operating system and filepath of this script */
@@ -35,11 +35,6 @@ call addJarsFromDirToClasspath javaFolder
 /* exit this program if the return value of the latest routine call returned "true" */
 if result = .true then exit
 say time() "loading resources"
-
-/* apply a hot fix provided by BSF.CLS */
-say .routines~hasEntry("BsfApplyHotFixCrash")
-if .routines~hasEntry("BsfApplyHotFixCrash") then
-	call BsfApplyHotFixCrash .true
 
 /* static class imports */
 call bsf.import "javafx.beans.value.ChangeListener", "ChangeListener"
@@ -74,8 +69,8 @@ urlAppDir = jfile~toUri~toUrl
    one could also use @font-face in css to load fonts, but as of 2017-08-24 there is a bug in JavaFX 8 if the
    path to the fonts has spaces in it. That is why it is safer to use this method
    see https://stackoverflow.com/questions/33973921/javafx-font-face-css-error-loadstylesheetunprivileged */
-.Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquindark-regular.ttf"), 14)
-.Font~loadFont(.appClzLdr~getResourceAsStream("fxml/fonts/palanquin-regular.ttf")    , 14)
+.Font~loadFont(.appClzLdr~getResourceAsStream("resources/fonts/palanquindark-regular.ttf"), 14)
+.Font~loadFont(.appClzLdr~getResourceAsStream("resources/fonts/palanquin-regular.ttf")    , 14)
 
 /* launch the JavaFX Application Thread */
 .environment~Application = bsfCreateRexxProxy(.RxApplication~new,,"javafx.application.Application")
@@ -106,7 +101,7 @@ syntax:
   rexxEventHandler = bsfCreateRexxProxy(self,,"javafx.event.EventHandler")
   stage~setOnCloseRequest(rexxEventHandler)
   /* load and attach FXML file */
-  sceneFXMLUrl = .appClzLdr~findResource("fxml/SAA.fxml")
+  sceneFXMLUrl = .appClzLdr~findResource("resources/SAA.fxml")
   sceneFXML    = .FXMLLoader~load(sceneFXMLUrl)   -- load the fxml document
   say time() "starting app"
   /* create a scene from the FXML DOM and assign it to the stage */
@@ -144,6 +139,19 @@ syntax:
   end
 
 /**
+ * Creates change listeners on the "focused" property of some predefined mandatory textfields
+ */
+::method setUpValidators private
+  IDs = "databaseHost", "databaseDatabase", "databaseUsername", -
+        "servicenowURL", "servicenowUsername", "servicenowPassword", -
+        "importDatabase", "importServiceNow"
+  loop ID over IDs
+    rexxProxy = bsfCreateRexxProxy(.formValidator~new,,.ChangeListener)
+    control = .my.app~SAA.fxml[ID~upper]
+    control~focusedProperty~addListener(rexxProxy)
+  end
+	
+/**
  * Sets change listener to various controls of the FXML file
  */
 ::method setUpListeners private
@@ -160,20 +168,6 @@ syntax:
   rexxProxy = bsfCreateRexxProxy(.mainTabPaneChangeListener~new,,.ChangeListener)
   mainTabPane = .my.app~SAA.fxml~mainTabPane
   mainTabPane~getSelectionModel~selectedItemProperty~addListener(rexxProxy)
-
-/**
- * Creates change listeners on the "focused" property of some predefined mandatory textfields
- */
-::method setUpValidators private
-  IDs = "databaseHost", "databaseDatabase", "databaseUsername", -
-        "servicenowURL", "servicenowUsername", "servicenowPassword", -
-        "importDatabase", "importServiceNow"
-  loop ID over IDs
-    rexxProxy = bsfCreateRexxProxy(.formValidator~new,,.ChangeListener)
-    control = .my.app~SAA.fxml[ID~upper]
-    control~focusedProperty~addListener(rexxProxy)
-  end
-
 
 
 /**
@@ -334,11 +328,11 @@ syntax:
   use arg informationDirectory
   tables = .array~new
   if informationDirectory~isA(.stringTable) then do
-    name     = informationDirectory~dbName
-    type     = informationDirectory~type
-    host     = informationDirectory~host
-    port     = informationDirectory~port
-    url      = informationDirectory~url
+    name = informationDirectory~dbName
+    type = informationDirectory~type
+    host = informationDirectory~host
+    port = informationDirectory~port
+    url = informationDirectory~url
     username = informationDirectory~user
     password = informationDirectory~pass
   end
@@ -486,7 +480,7 @@ syntax:
   currentTable~getRoot~getChildren~clear
 
 /**
- * Retrievs fresh saved Data from the JSON file and displays it in the current Table
+ * Retrieves fresh saved Data from the JSON file and displays it in the current Table
  */
 ::method fillTable private
   expose currentTable
@@ -499,7 +493,8 @@ syntax:
   callbackFunction = bsfCreateRexxProxy(.GetChildrenCallback~new,,.fxCallback)
   /* extend the Java class RecursiveTreeObject, which is the data model that is used in JFXTreeTableView
       cf. <b>Note:</b> the data object used in JFXTreeTableView <b>must</b> extends this class
-      https://github.com/jfoenixadmin/JFoenix/blob/master/jfoenix/src/main/java/com/jfoenix/controls/datamodels/treetable/RecursiveTreeObject.java */
+      https://github.com/jfoenixadmin/JFoenix/blob/master/jfoenix/src/main/java/com/jfoenix/controls/
+	  /datamodels/treetable/RecursiveTreeObject.java */
   extendRecursiveTreeObject = bsf.createProxyClass("com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject")
   /* iterate over the queue - `informationTable` will be a stringTable */
   loop informationTable over jsonData
@@ -522,7 +517,7 @@ syntax:
 
 /**
  * implements javafx.util.Callback<P,R>(P o)
- * This class allows instances that remember the message to be sent to the data model instances to
+ * This class allows instances, that remember the message to be sent to the data model instances to
  *  return the attribute that should be shown in the table cell.
  */
 ::class PropertyValueFactory
@@ -599,7 +594,7 @@ syntax:
     newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
     call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
     /* run the Application again making use of the new classpath */
-    'rexxj "ServiceNow App Accelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+    'rexxj "ServiceNowAppAccelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
     /* change PATH back to original and return "true" to exit the application */
     call value "CLASSPATH", classpath, "ENVIRONMENT"
     return .true

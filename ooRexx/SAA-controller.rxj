@@ -31,6 +31,13 @@ call bsf.import "java.util.Base64", "Base64"
 
 
 /**
+ * Opens the file `installation-guide.md` in the root directory
+ */
+::routine openManual public
+  .Application~getHostServices~showDocument("installation-guide.html")
+
+
+/**
  * Selects the next Tab ('configuration')
  */
 ::routine goToConfiguration public
@@ -68,7 +75,7 @@ call bsf.import "java.util.Base64", "Base64"
     co = condition('o')
     message = co['ADDITIONAL'][1]
     call showPopup message
-    testDatabaseConnectionButton~graphic = .nil         -- remove the loading spinner, test connection failed
+    testDatabaseConnectionButton~graphic = .nil         -- remove the loading spinner, test connection failed 
 
 /**
  * Saves the provided Database information in an ooRexx StringTable and
@@ -92,8 +99,8 @@ call bsf.import "java.util.Base64", "Base64"
   rxObj~user = databaseUsername~getText
   rxObj~pass = databasePassword~getText
   rxObj~dbName = databaseDatabase~getText
-  call saveRexxObjToJson rxObj, "Database"
-  if result <> .false then
+  success = saveRexxObjToJson(rxObj, "Database")
+	if success then
     call setCheckGraphicToButton saveDatabaseButton
 
 /**
@@ -113,9 +120,9 @@ call bsf.import "java.util.Base64", "Base64"
   rxObj~url = servicenowURL~getText
   rxObj~user = servicenowUsername~getText
   rxObj~pass = servicenowPassword~getText
-  call saveRexxObjToJson rxObj, "ServiceNow"
+  success = saveRexxObjToJson(rxObj, "ServiceNow")
   /* check if there was an error while saving, caused by lack of password */
-  if result <> .false then
+  if success then
     call setCheckGraphicToButton saveServiceNowButton
 
 
@@ -168,19 +175,19 @@ call bsf.import "java.util.Base64", "Base64"
   /* create another Proxy - let this class carry out the invoked method "run" */
   runnable = bsfCreateRexxProxy(self, userData, .Runnable)
   /* since this Async call operates in a separate Thread, we cannot change controls in the user interface
-     so we need to use Platform.runLater() to queue the GUI changes in the main FX Application Thread */
+     so we need to use Platform.runLater() to queue the GUI changes in the main JavaFX Application Thread */
   .Platform~runLater(runnable)
 
 /**
  * The REST API call was not successful, probably because the host is not reachable
  * Displays an error message with the stack trace
+ * Platform~runLater() is used to execute GUI changes
  *
  * @param exception - <code>com.mashape.unirest.http.exceptions.UnirestException</code>
  */
-::method failed
-  use arg exception
-  say exc~getMessage exc~getSuppressed exc~getCause exc~getStackTrace
-  userData = .stringTable~new
+ ::method failed
+  use arg exception 
+	userData = .stringTable~new
   userData~exception = exception
   runnable = bsfCreateRexxProxy(self, userData, .Runnable)
   .Platform~runLater(runnable)
@@ -355,6 +362,7 @@ call bsf.import "java.util.Base64", "Base64"
     jsonStream~lineOut(line)
   end
   jsonStream~close                    -- release the lock on this file
+  return .true
 
 
 /**
@@ -386,7 +394,8 @@ call bsf.import "java.util.Base64", "Base64"
   jsonObj~Database~appendAll(tmpObj~Database)
   jsonObj~ServiceNow~appendAll(tmpObj~ServiceNow)
   syntax:
-    jsonStream~close
+    if jsonStream~isA(.stream) then
+      jsonStream~close
     return jsonObj
 
 /**
@@ -398,7 +407,7 @@ call bsf.import "java.util.Base64", "Base64"
   if .masterPassword = .nil then do
     JFXAlert = .bsf~new("com.jfoenix.controls.JFXAlert", .stage)
     .environment~JFXAlert = JFXAlert      -- make it accessible for JFXAlert-controller.rxj
-    alertFXMLUrl = .appClzLdr~findResource("fxml/JFXAlert.fxml")
+    alertFXMLUrl = .appClzLdr~findResource("resources/JFXAlert.fxml")
     alertFXML    = .FXMLLoader~load(alertFXMLUrl)   -- load the fxml document
     JFXAlert~setContent(bsf.createJavaArrayOf("javafx.scene.Node", alertFXML))    -- setContent is expecting a java array of type Node
     okButtonType = .bsf~new("javafx.scene.control.ButtonType", "OK", bsf.import("javafx.scene.control.ButtonBar$ButtonData")~OK_DONE)
@@ -437,9 +446,9 @@ call bsf.import "java.util.Base64", "Base64"
   /* fetch the indices of the selected ComboBox items and supply them to the .ImportTask class */
   databaseIndex = importDatabase~getSelectionModel~getSelectedIndex
   servicenowIndex = importServiceNow~getSelectionModel~getSelectedIndex
-  if .my.app~hasEntry("importTask") then do
-      -- todo: cancel the last task, start new
-  end
+  /* interrupt the last Thread if necessary */
+  if .environment~hasEntry("jTask") then
+      .jTask~cancel(.true)
   .my.app~importTask = .ImportTask~new(databaseIndex, servicenowIndex)
   /* call a method to load tables from the database */
   tableNames = .my.app~importTask~extractTables
@@ -518,7 +527,7 @@ call bsf.import "java.util.Base64", "Base64"
   use strict arg databaseIndex, servicenowIndex
   jsonEngine = .json~new
   importProgressbar = .my.app~SAA.fxml~importProgressbar
-  -- importProgressbar~setProgress(-1.0)     -- indeterminate progress
+  importProgressbar~setProgress(-1.0)     -- indeterminate progress
   /* create an array which holds all fx:ids of panes to get a hook for GUI manipulation in the `unlockNextStep` method */
   steps = .array~of("readingDatabasePane", "creatingTablesPane", "uploadingDataPane", "allDonePane")
   step = 1
@@ -562,6 +571,7 @@ call bsf.import "java.util.Base64", "Base64"
   databaseConnection = dbConnect(d~type, d~host, d~user, d~pass, d~dbName, d~port)
   databaseStatement = databaseConnection~createStatement
 
+  
 /**
  * Iterates over all selected tables, extracts meta information and calls the REST API to create new tables
  * Runs in a separate thread
@@ -606,7 +616,6 @@ call bsf.import "java.util.Base64", "Base64"
  */
 ::method unlockNextStep
   expose steps step
-  signal on syntax
   idOfPane = steps~at(step)~upper
   currentPane = .my.app~SAA.fxml[idOfPane]
   checkSymbol = .bsf~new("de.jensd.fx.glyphs.materialicons.MaterialIconView", .MaterialIcon~CHECK) ~~setY(30)
@@ -624,21 +633,21 @@ call bsf.import "java.util.Base64", "Base64"
   end
   return
 
-  syntax:
-    say ppCondition2(condition("object"))
-    raise propagate
 
+  
+  
+  
+  
 /**
  * Calculates the number of all API calls that will be made
  *
  * @return totalApiCalls - The number of all tables and its rows
  */
 ::method calculateTotalApiCalls
-  expose databaseTables databaseStatement totalApiCalls currentProgress lastProgressBarUpdateAt
+  expose databaseTables databaseStatement totalApiCalls currentProgress
   currentProgress = 0
-  lastProgressBarUpdateAt = 0
   totalApiCalls = databaseTables~items    -- one api call for each table
-  jInt1 = box("I", 1)                     -- convert the Rexx String "1" to a java.lang.Integer 1
+  jInt1 = .java.lang.Integer~new(1)                     -- convert the Rexx String "1" to a java.lang.Integer 1
   loop tableName over databaseTables
     sql = "SELECT COUNT(1) FROM" tableName
     resultSet = databaseStatement~executeQuery(sql)
@@ -698,17 +707,14 @@ call bsf.import "java.util.Base64", "Base64"
  * Unlocks the last step if task has finished
  */
 ::method progress
-  expose totalApiCalls currentProgress importProgressbar lastProgressBarUpdateAt
+  expose totalApiCalls currentProgress importProgressbar
   currentProgress += 1
   progressTo = currentProgress / totalApiCalls
-  increment = (progressTo - lastProgressBarUpdateAt) * 100
   finished = progressTo = 1
-  if increment >= 1 | finished then do
-    .FxGUIThread~runLater(importProgressbar, "setProgress", "I", progressTo)
-    lastProgressBarUpdateAt = progressTo
-    if finished then
-      self~unlockNextStep   -- unlock last step, show "All done!" message
-  end
+  .FxGUIThread~runLater(importProgressbar, "setProgress", "I", progressTo)
+  if finished then
+    self~unlockNextStep   -- unlock last step, show "All done!" message
+
 
 /**
  * Extracts all relevant information about the given table using JDBC meta data
@@ -722,12 +728,18 @@ call bsf.import "java.util.Base64", "Base64"
   fieldList = .array~new
   metaData = databaseConnection~getMetaData
   resultSet = metaData~getColumns(.nil, .nil, tableName, .nil)
-  do while resultSet~next
+  loop while resultSet~next
     columnInfo = self~getColumnSchema(resultSet)
     fieldList~append(columnInfo)
   end
   return fieldList
 
+/**
+ * Converts column information about a table to a .stringTable object
+ *
+ * @param resultSet - pointed to a specific table
+ * @return columnInfo - a stringTable object containing relevant information about the table
+ */
 ::method getColumnSchema
   use arg resultSet
   columnInfo = .stringTable~new
@@ -735,8 +747,8 @@ call bsf.import "java.util.Base64", "Base64"
   nullable = resultSet~getString("IS_NULLABLE")
   columnInfo~mandatory = (nullable = "NO")~?(.true, .false) -- if the field is not nullable, it is mandatory
   columnInfo~comments = resultSet~getString("REMARKS")
-  columnType = resultSet~getString("TYPE_NAME")
-  select case columnType
+  columnInfo~max_length = resultSet~getString("COLUMN_SIZE")
+  select case resultSet~getString("TYPE_NAME")
     when "TINYINT", "SMALLINT", "MEDIUMINT", "INT" then
       type = "Integer"
     when "BIGINT" then
@@ -767,7 +779,6 @@ call bsf.import "java.util.Base64", "Base64"
 ::method createServiceNowTable
   expose serviceNowURL jsonEngine
   use arg tableName
-  signal on syntax
   tableSchema = self~getTableSchema(tableName)
   /* convert to json without unnecessary line breaks and white spaces */
   jsonString = jsonEngine~toMinifiedJson(tableSchema)
@@ -782,8 +793,8 @@ call bsf.import "java.util.Base64", "Base64"
   statusCode = httpResponse~getStatus
   resultObj = jsonEngine~fromJson(jsonResponse)
   /* no appropriate content returned so output the json response as error message */
-  if statusCode <> 290 then do        -- custom status code
-    message = "[Error]" jsonResponse
+  if statusCode <> 290 & statusCode <> 200  then do        -- custom status code
+    self~logAndProgress("[Error]" jsonResponse)
     return .nil
   end
   else do
@@ -791,13 +802,14 @@ call bsf.import "java.util.Base64", "Base64"
     columnCount = resultObj["result"]["Columns"]
     message = "Table" pp(tableName) "created as" pp(serviceNowTable) "with" columnCount "columns"
   end
-  self~log(message)
-  self~progress
+  self~logAndProgress(message)
   return serviceNowTable
 
-  syntax:
-    say ppCondition2(condition("object"))
-    raise propagate
+  
+
+  
+  
+  
 
 /**
  * Iterates over all rows of the database table, extracting all the data and sending it to the ServiceNow instance
@@ -807,7 +819,7 @@ call bsf.import "java.util.Base64", "Base64"
  */
 ::method uploadData
   expose serviceNowURL jsonEngine databaseStatement
-  use arg tableName, serviceNowTable
+  use strict arg tableName, serviceNowTable
   signal on syntax
   rexxProxy = bsfCreateRexxProxy(.DataInsertionCallback~new,, .Callback)
   API.URL = serviceNowURL || "/api/now/table/" || serviceNowTable

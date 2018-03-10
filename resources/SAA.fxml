@@ -55,8 +55,26 @@
                                     <Font size="22.0" />
                                  </font>
                               </Text>
-                              <Label lineSpacing="4.0" text="This ooRexx based application will help you to extract local databases into your ServiceNow instance while avoiding unnecessary complexity. Simply follow the instructions by connecting to the database and your ServiceNow instance and start uploading. Be assured that all data will be treated in confidence and not saved or shared in any way persistantly." textAlignment="JUSTIFY" wrapText="true" />
-                              <TextFlow lineSpacing="6.0" textAlignment="JUSTIFY">
+                              <Label lineSpacing="0.0" text="This ooRexx based application will help you to extract local databases into your ServiceNow instance while avoiding unnecessary complexity. Simply follow the instructions by connecting to the database and your ServiceNow instance and start uploading. Be assured that all data will be treated in confidence and not saved or shared in any way persistantly." textAlignment="JUSTIFY" wrapText="true" />
+                              <TextFlow lineSpacing="0.0" textAlignment="JUSTIFY">
+                                 <children>
+                                    <Label text="If you are missing the necessary APIs, follow the instructions">
+                                       <padding>
+                                          <Insets top="2.0" />
+                                       </padding>
+                                    </Label>
+                                    <Hyperlink onAction="call openManual" text="in the installation manual">
+                                       <opaqueInsets>
+                                          <Insets />
+                                       </opaqueInsets>
+                                    </Hyperlink>
+                                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="." />
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets top="2.0" />
+                                 </VBox.margin>
+                              </TextFlow>
+                              <TextFlow lineSpacing="0.0" textAlignment="JUSTIFY">
                                  <children>
                                     <Label text="Should you encounter any unforeseen errors, do not hesitate to contact">
                                        <padding>
@@ -264,7 +282,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/" text="https://dev36664.service-now.com/">
+                                                      <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/">
                                                          <validators>
                                                             <RequiredFieldValidator />
                                                          </validators>
@@ -282,7 +300,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance" text="admin">
+                                                      <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance">
                                                          <validators>
                                                             <RequiredFieldValidator />
                                                          </validators>
@@ -300,7 +318,7 @@
                                                          </HBox.margin>
                                                       </Text>
                                                       <Pane HBox.hgrow="ALWAYS" />
-                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance" text="zPfH5DreCSpq">
+                                                      <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance">
                                                          <validators>
                                                             <RequiredFieldValidator />
                                                          </validators>
@@ -362,21 +380,21 @@
                                                       <Insets top="10.0" />
                                                    </VBox.margin>
                                                 </JFXComboBox>
-                                                <JFXTreeTableView fx:id="configurationManageDatabases" prefHeight="260.0">
-                                                   <VBox.margin>
-                                                      <Insets top="15.0" />
-                                                   </VBox.margin>
-                                                     <columns>
-                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Type" />
-                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="100.0" text="Host" />
-                                                     <JFXTreeTableColumn minWidth="0.0" prefWidth="60.0" text="Port" />
-                                                      <JFXTreeTableColumn text="Name" />
-                                                      <JFXTreeTableColumn text="Username" />
-                                                      <JFXTreeTableColumn text="Password" />
+                                                <JFXTreeTableView fx:id="configurationManageDatabases" managed="true" visible="true" prefHeight="260.0">
+													<VBox.margin>
+														<Insets top="15.0" />
+													</VBox.margin>
+													<columns>
+														<JFXTreeTableColumn text="Type" prefWidth="100.0" />
+														<JFXTreeTableColumn text="Host" prefWidth="100.0"  />
+														<JFXTreeTableColumn text="Port" prefWidth="60.0" />
+														<JFXTreeTableColumn text="Name" />
+														<JFXTreeTableColumn text="Username" />
+														<JFXTreeTableColumn text="Password" />
                                                     </columns>
-                                                   <columnResizePolicy>
-                                                      <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                                                   </columnResizePolicy>
+													<columnResizePolicy>
+														<TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+													</columnResizePolicy>
                                                 </JFXTreeTableView>
                                                 <JFXTreeTableView fx:id="configurationManageServiceNowInstances" managed="false" prefHeight="260.0" visible="false">
                                                    <columns>
