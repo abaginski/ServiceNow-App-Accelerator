@@ -160,7 +160,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXTextField text="localhost" fx:id="databaseHost" prefWidth="250.0" promptText="localhost or IP address">
+                                    <JFXTextField fx:id="databaseHost" prefWidth="250.0" promptText="localhost or IP address">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
@@ -191,7 +191,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXTextField text="main_database" fx:id="databaseDatabase" prefWidth="250.0" promptText="enter Database name">
+                                    <JFXTextField fx:id="databaseDatabase" prefWidth="250.0" promptText="enter Database name">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
@@ -209,7 +209,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXTextField text="root" fx:id="databaseUsername" prefWidth="250.0" promptText="enter Username">
+                                    <JFXTextField fx:id="databaseUsername" prefWidth="250.0" promptText="enter Username">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
@@ -227,7 +227,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXPasswordField text="7hslqhj67EY9zpV9" fx:id="databasePassword" prefWidth="250.0" promptText="enter Password" />
+                                    <JFXPasswordField fx:id="databasePassword" prefWidth="250.0" promptText="enter Password" />
                                   </children>
                                   <VBox.margin>
                                     <Insets right="10.0" top="10.0" />
@@ -282,7 +282,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXTextField text="https://dev48855.service-now.com/" fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/">
+                                    <JFXTextField fx:id="servicenowURL" prefWidth="250.0" promptText="e.g. https://dev36664.service-now.com/">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
@@ -300,7 +300,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXTextField text="admin" fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance">
+                                    <JFXTextField fx:id="servicenowUsername" prefWidth="250.0" promptText="Username for this instance">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
@@ -318,7 +318,7 @@
                                       </HBox.margin>
                                     </Text>
                                     <Pane HBox.hgrow="ALWAYS" />
-                                    <JFXPasswordField text="sqbeeG5TJE6H" fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance">
+                                    <JFXPasswordField fx:id="servicenowPassword" prefWidth="250.0" promptText="Password for this instance">
                                       <validators>
                                         <RequiredFieldValidator />
                                       </validators>
