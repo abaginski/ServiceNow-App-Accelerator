@@ -14,7 +14,7 @@ call bsf.import "com.mashape.unirest.http.async.Callback", "Callback"
 call bsf.import "com.mashape.unirest.http.Unirest", "Unirest"
 call bsf.import "javafx.application.Platform", "Platform"
 call bsf.import "java.lang.Runnable", "Runnable"
-call bsf.import "java.util.Base64", "Base64"
+
 
 /**
  * Fetches the E-Mail address from slotDir and writes a new Mail using the default Mail client
@@ -100,7 +100,7 @@ call bsf.import "java.util.Base64", "Base64"
   rxObj~pass = databasePassword~getText
   rxObj~dbName = databaseDatabase~getText
   success = saveRexxObjToJson(rxObj, "Database")
-	if success then
+  if success then
     call setCheckGraphicToButton saveDatabaseButton
 
 /**
@@ -187,7 +187,7 @@ call bsf.import "java.util.Base64", "Base64"
  */
  ::method failed
   use arg exception 
-	userData = .stringTable~new
+  userData = .stringTable~new
   userData~exception = exception
   runnable = bsfCreateRexxProxy(self, userData, .Runnable)
   .Platform~runLater(runnable)
@@ -314,7 +314,7 @@ call bsf.import "java.util.Base64", "Base64"
 ::routine setLoadingSymbolToButton
   use arg button
   loadingSymbol = .bsf~new("javafx.scene.control.ProgressIndicator", -1.0)      -- indeterminate progress
-  loadingSymbol~prefHeight = 20.0                                   -- resize the loading symbol
+  loadingSymbol~prefHeight = 20.0            -- resize the loading symbol
   loadingSymbol~prefWidth  = 20.0
   button~graphic = loadingSymbol             -- set the progress indicator as image for the Button
 
@@ -496,7 +496,7 @@ call bsf.import "java.util.Base64", "Base64"
     call showPopup "No tables selected"
     return
   end
-  loop i = 1 to numOfTables     -- prevent IndexOutOfBound Exception
+  loop i=1 to numOfTables     -- prevent IndexOutOfBound Exception
     checkbox = checkboxes~get(i)
     if checkbox~isSelected then do
       tableName = checkBox~getText
@@ -544,6 +544,8 @@ call bsf.import "java.util.Base64", "Base64"
   .Unirest~setTimeouts(0,0)
   self~connectToDatabase(databaseIndex)
 
+  
+  
 /**
  * Base64 encodes a string with the username and password of the ServiceNow instance for the REST API calls
  *
@@ -554,9 +556,7 @@ call bsf.import "java.util.Base64", "Base64"
   user = credentials~user
   pass = credentials~pass
   authString = user":"pass
-  jString = .java.lang.String~new(authString) -- also box("ST", authString)       -- create a java.lang.String
-  byteArray = jString~getBytes
-  basicAuth = "Basic" .Base64~getEncoder~encodeToString(byteArray)
+  basicAuth = "Basic" authString~encodeBase64    -- encodeBase64 is a method of the Rexx' string class
   return basicAuth
 
 /**
@@ -647,7 +647,7 @@ call bsf.import "java.util.Base64", "Base64"
   expose databaseTables databaseStatement totalApiCalls currentProgress
   currentProgress = 0
   totalApiCalls = databaseTables~items    -- one api call for each table
-  jInt1 = .java.lang.Integer~new(1)                     -- convert the Rexx String "1" to a java.lang.Integer 1
+  jInt1 = .java.lang.Integer~new(1)       -- convert the Rexx String "1" to a java.lang.Integer 1
   loop tableName over databaseTables
     sql = "SELECT COUNT(1) FROM" tableName
     resultSet = databaseStatement~executeQuery(sql)
@@ -793,7 +793,7 @@ call bsf.import "java.util.Base64", "Base64"
   statusCode = httpResponse~getStatus
   resultObj = jsonEngine~fromJson(jsonResponse)
   /* no appropriate content returned so output the json response as error message */
-  if statusCode <> 290 & statusCode <> 200  then do        -- custom status code
+  if statusCode <> 200  then do        -- custom status code
     self~logAndProgress("[Error]" jsonResponse)
     return .nil
   end

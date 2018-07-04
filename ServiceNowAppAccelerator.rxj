@@ -1,7 +1,7 @@
 #!/usr/bin/rexx
 /**
- * The main application which loads all Fonts, puts all `jar` files to the classpath
- * and starts the GUI
+ * The main application which loads all Fonts and starts the GUI
+ *
  *
  * @author Adrian Baginski, BSc (WU)
  * @version 1.0, 2017-08-27
@@ -28,12 +28,12 @@ signal on syntax
 /* parse operating system and filepath of this script */
 parse source os . absoluteFilepath
 
-/* add all jars from the java directory to the classpath to make use of the provided classes */
-appDirectory = filespec("Location", absoluteFilepath)   -- determine path to this Rexx program
-javaFolder   = appDirectory || "java" || .file~separator
-call addJarsFromDirToClasspath javaFolder
-/* exit this program if the return value of the latest routine call returned "true" */
-if result = .true then exit
+
+/* add all jars from the java directory to the classpath to make use of the provided classes 
+   determine path to this Rexx program */
+appDirectory = filespec("Location", absoluteFilepath)   
+
+
 say time() "loading resources"
 
 /* static class imports */
@@ -70,7 +70,7 @@ urlAppDir = jfile~toUri~toUrl
    path to the fonts has spaces in it. That is why it is safer to use this method
    see https://stackoverflow.com/questions/33973921/javafx-font-face-css-error-loadstylesheetunprivileged */
 .Font~loadFont(.appClzLdr~getResourceAsStream("resources/fonts/palanquindark-regular.ttf"), 14)
-.Font~loadFont(.appClzLdr~getResourceAsStream("resources/fonts/palanquin-regular.ttf")    , 14)
+.Font~loadFont(.appClzLdr~getResourceAsStream("resources/fonts/palanquin-regular.ttf"), 14)
 
 /* launch the JavaFX Application Thread */
 .environment~Application = bsfCreateRexxProxy(.RxApplication~new,,"javafx.application.Application")
@@ -146,11 +146,11 @@ syntax:
         "servicenowURL", "servicenowUsername", "servicenowPassword", -
         "importDatabase", "importServiceNow"
   loop ID over IDs
-    rexxProxy = bsfCreateRexxProxy(.formValidator~new,,.ChangeListener)
+    rexxProxy = bsfCreateRexxProxy(.formValidator~new,, .ChangeListener)
     control = .my.app~SAA.fxml[ID~upper]
-    control~focusedProperty~addListener(rexxProxy)
+    control~focusedProperty~addListener( rexxProxy)
   end
-	
+  
 /**
  * Sets change listener to various controls of the FXML file
  */
@@ -278,9 +278,9 @@ syntax:
   end
 
 
+  
 /**
- * The data model class "ServiceNow" holds all attributes that are to be shown in the affiliated Table
- *  in the `Manage` Tab
+ * The data model class "ServiceNow" holds all attributes that are to be shown in the affiliated Table in the `Manage` Tab
  */
 ::class ServiceNow
 ::attribute url
@@ -494,7 +494,7 @@ syntax:
   /* extend the Java class RecursiveTreeObject, which is the data model that is used in JFXTreeTableView
       cf. <b>Note:</b> the data object used in JFXTreeTableView <b>must</b> extends this class
       https://github.com/jfoenixadmin/JFoenix/blob/master/jfoenix/src/main/java/com/jfoenix/controls/
-	  /datamodels/treetable/RecursiveTreeObject.java */
+    /datamodels/treetable/RecursiveTreeObject.java */
   extendRecursiveTreeObject = bsf.createProxyClass("com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject")
   /* iterate over the queue - `informationTable` will be a stringTable */
   loop informationTable over jsonData
@@ -513,7 +513,6 @@ syntax:
     /* attach it to the root node */
     root~getChildren~add(RecursiveTreeItem)
   end
-
 
 /**
  * implements javafx.util.Callback<P,R>(P o)
@@ -545,7 +544,7 @@ syntax:
   attributeValue = rexxProxy~sendMessage0(attributeName)
   return .SimpleStringProperty~new(attributeValue)
 
-
+  
 
 /**
  * Another Callback function for retrieving the children of the data model RecursiveTreeObject
@@ -560,45 +559,6 @@ syntax:
 ::method call
   use arg RecursiveTreeObject
   return RecursiveTreeObject~getChildren
-
-/**************************************************************************************************/
-/*                               ROUTINES                                                         */
-/**************************************************************************************************/
-
-/**
- * Inserts the Java archives from the "java" directory to the classpath and restarts this application
- * to make the classes of those libraries accessible
- *
- * @param javaDir - The absolute filepath to the directory which holds the required Java archives
- */
-::routine addJarsFromDirToClasspath
-  use strict arg javaDir
-  if \SysFileExists(javaDir) then
-    raise syntax 40.900 array("The supplied argument" javaDir "is not a valid directory!")
-  pathExtension = ""
-  /* use a Built-In Function (BIF) to retrieve all jars from the java directory */
-  call SysFileTree javaDir, "jars", "F"   -- search for files in java/ and save as a .stem in `jars`
-  loop i = 1 to jars.0              -- the 0th entry of a stem holds the number of items
-    parse var jars.i . . . . jar    -- remove the first 4 bits of information (date, time, size, access control)
-    extension = filespec("extension", jar)      -- fetch the extension of the file
-    if extension = "jar" then do
-      pathExtension ||= jar~strip
-      pathExtension ||= .file~pathSeparator       -- the pathseperator of the File class holds ";" or ":" depending on the OS
-    end
-  end
-  /* get the current value of the CLASSPATH environment variable */
-  classpath = value("CLASSPATH",,"ENVIRONMENT")
-  /* look for our jar files in the classpath */
-  if classpath~pos(pathExtension) = 0 then do
-    say time() "updating environment"
-    newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
-    call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
-    /* run the Application again making use of the new classpath */
-    'rexxj "ServiceNowAppAccelerator.rxj"'			-- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
-    /* change PATH back to original and return "true" to exit the application */
-    call value "CLASSPATH", classpath, "ENVIRONMENT"
-    return .true
-  end
 
 
 

@@ -1,0 +1,81 @@
+#!/usr/bin/rexx
+/**
+ * Inserts the Java archives from the "java" directory and Java-Version dependent subdirectories 
+ * to the classpath to make the classes of those libraries accessible and start the main application
+ *
+ * @author Adrian Baginski, BSc (WU)
+ * @version 1.0, 2018-03-14
+ *---------------------- Apache Version 2.0 license -------------------------
+ *        Copyright 2018 Adrian Baginski
+ *
+ *        Licensed under the Apache License, Version 2.0 (the "License");
+ *        you may not use this file except in compliance with the License.
+ *        You may obtain a copy of the License at
+ *
+ *            http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *        Unless required by applicable law or agreed to in writing, software
+ *        distributed under the License is distributed on an "AS IS" BASIS,
+ *        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *        See the License for the specific language governing permissions and
+ *        limitations under the License.
+ *-----------------------------------------------------------------------------
+ */
+signal on syntax
+
+parse source os . absoluteFilepath
+
+/* fetch path to this Rexx program */
+appDirectory = filespec("Location", absoluteFilepath)
+javaDir   = appDirectory || "java" || .file~separator
+
+/* determine java version */
+'java -version 2>&1 | rxqueue'  -- fetch output into RexxQueue
+majorVersion = ""
+do while queued() > 0     -- make sure that all queued lines get read
+  parse pull line
+  if majorVersion="" then
+    parse var line "java version """ majorVersion "." minorVersion "." .
+end
+
+pathExtension = ""
+call addJarsToPathExtension
+
+/* now also add java version dependent jars from the right subdirectory */
+subDir = (majorVersion >= 9)~?("Java 9", "Java 8")
+javaDir ||= subdir || .file~separator
+call addJarsToPathExtension
+
+/* get the current value of the CLASSPATH environment variable */
+classpath = value("CLASSPATH",,"ENVIRONMENT")
+
+say time() "updating environment"
+newClasspath = classpath || .file~pathSeparator || pathExtension    -- append our paths to be looked up last
+call value "CLASSPATH", newClasspath, "ENVIRONMENT"   -- change the classpath
+
+/* run the Application again making use of the new classpath */
+'rexxj "ServiceNowAppAccelerator.rxj"'      -- this statement will be sent directly to the terminal/console, which will invoke "rexxj"
+/* change PATH back to original and return "true" to exit the application */
+call value "CLASSPATH", classpath, "ENVIRONMENT"
+exit
+
+addJarsToPathExtension:
+  call SysFileTree javaDir, "jars", "F"   -- search for files in java/ and save as a .stem in `jars`
+  loop i = 1 to jars.0                    -- the 0th entry of a stem holds the number of items
+    parse var jars.i . . . . jar          -- remove the first 4 bits of information (date, time, size, access control)
+    extension = filespec("extension", jar)        -- fetch the extension of the file
+    if extension = "jar" then do
+      pathExtension ||= jar~strip
+      pathExtension ||= .file~pathSeparator       -- the pathseparator of the File class holds ";" or ":" depending on the OS
+    end
+  end
+  return
+  
+syntax:
+  co = condition("object")
+  say ppCondition2(co)
+  exit -1
+  
+  
+  
+::requires "rgf_util2.rex"  -- holds the routine ppCondition2 for error printing
